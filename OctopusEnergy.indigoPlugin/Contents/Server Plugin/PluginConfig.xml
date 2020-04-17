@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	
+	<Field id="simpleseparator1" type="separator">
+	</Field>
+	<Field type="checkbox" id="useOctopusAPI" defaultValue="false">
+        <Label>Do you have an Octopus Account and API Key:</Label>
+        <Description>API Key is in "Account Page"</Description>
+    </Field>
+    <Field id="OctopusEmail" type="textfield" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+	<Label>Enter the email account for Octopus Energy:</Label>
+	</Field>
+	<Field id="OctopusAPIkey" type="textfield" visibleBindingId="useOctopusAPI" visibleBindingValue="true" >
+	<Label>Enter the API Key for your Octopus Account</Label>
+	</Field>
+	<Field type="checkbox" id="LogPrices" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+        <Label>Do you want to log daily price history</Label>
+        <Description>Saves in logging folder</Description>
+    </Field>
+    <Field type="checkbox" id="LogUsgae" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+        <Label>Do you want to log usage history</Label>
+        <Description>Saves in logging folder</Description>
+    </Field>
+    <Field type="checkbox" id="SupplyGas" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+        <Label>Do you have Gas supplied by Octopus ?</Label>
+        <Description>Saves in logging folder</Description>
+    </Field>
+	
+	<Field id="simpleseparator2" type="separator">
+	</Field>
+	<Field id="Postcode" type="textfield">
+	<Label>Enter the Postcode for the supply address:</Label>
+	</Field>
+	
+	<Field id="simpleseparator3" type="separator">
+	</Field>
+	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
+		<Label>If you are having problems with the plugin (or you are instructed by support), you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
+	</Field>
+	<Field id="showDebugInfo" type="checkbox">
+	<Label>Enable debuging:</Label>
+	<Description>(not recommended)</Description>
+	</Field>
+	<Field id="simpleseparator4" type="separator">
+	</Field>
+	<Field id="midLabel" type="label" fontSize="small" fontColor="darkgray">
+		<Label>Polling frequency to Connect to the Octopus Servers</Label>
+	</Field>
+	<Field id="pollingFrequency" type="textfield" defaultValue="60">
+	<Label>Enter Polling Frequency in Seconds:</Label>
+	</Field>
+	<Field id="midLabel2" type="label" fontSize="small" fontColor="darkgray">
+	<Label>Not sure if this is necessary but I see timeouts in the App</Label>
+	</Field>
+	<Field id="requeststimeout" type="textfield" defaultValue="1">
+	<Label>Enter timeout (seconds) for requests to the Octopus API:</Label>
+	</Field>
+	
+</PluginConfig>
+ 

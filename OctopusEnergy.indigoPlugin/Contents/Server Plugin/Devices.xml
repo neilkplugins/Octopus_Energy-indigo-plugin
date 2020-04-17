@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Devices>
+	<!-- Define some devices -->
+	<Device type="custom" id="OctopusEnergy">
+		<Name>Octopus Energy Electricity Rates</Name>
+		<ConfigUI>
+			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
+				<Label>populate ui address field</Label>
+				<Description>duplicate of IP address to show in indigo UI</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+		<State id="Current_Electricity_Rate">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Current Electricity Rate</TriggerLabel>
+			<ControlPageLabel>Current Electricity Rate</ControlPageLabel>
+            </State>
+            <State id="Daily_Standing_Charge">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Daily Standard Charge</TriggerLabel>
+			<ControlPageLabel>Daily Standard Charge</ControlPageLabel>
+            </State>
+            <State id="Daily_Max_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Daily Max Rate</TriggerLabel>
+			<ControlPageLabel>Daily Max rate</ControlPageLabel>
+            </State>
+            <State id="Daily_Min_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Daily Min Rate</TriggerLabel>
+			<ControlPageLabel>Daily Min rate</ControlPageLabel>
+            </State>
+            <State id="Daily_Average_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Daily Average Rate</TriggerLabel>
+			<ControlPageLabel>Daily Average rate</ControlPageLabel>
+            </State>
+            <State id="deviceLastUpdated">
+                <ValueType>String</ValueType>
+                <TriggerLabel>Device Last Updated</TriggerLabel>
+                <ControlPageLabel>Device Last Updated</ControlPageLabel>
+            </State>
+
+        </States>
+        <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
+	</Device>
+</Devices>

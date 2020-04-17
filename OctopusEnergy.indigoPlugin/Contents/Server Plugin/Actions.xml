@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<Actions>
+	<Action id="RefreshCurrentRate" deviceFilter="self">
+		<Name>Refresh Current Electricity Rate</Name>
+		<CallbackMethod>refreshRate</CallbackMethod>
+	</Action>
+	<Action id="RefreshDailyRates" deviceFilter="self">
+		<Name>Refresh Daily 30 minutes Rates</Name>
+		<CallbackMethod>refreshDayRates</CallbackMethod>
+	</Action>
+</Actions>
