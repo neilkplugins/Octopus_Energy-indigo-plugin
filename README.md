@@ -1,5 +1,5 @@
 # Octopus_Energy-indigo-plugin
-A plugin for Indigo Domotics that connects to the UK Energy Provider Octopus Energy &amp; the Agile Tariff
+## A plugin for Indigo Domotics that connects to the UK Energy Provider Octopus Energy &amp; their Agile Tariff
 
 Octopus Energy is a UK Energy Supplier that offers a number of Tariff's that appeal to Electric Vehicle (EV) owners, as well as those who may be able to shape their consumption by managing demand through home automation.  This plugin was initially built to asses the viability of the Agile Tariff for my personal use.   You will find more information at https://octopus.energy as well as their API (which this plugin uses) at https://developer.octopus.energy/docs/api/
 
@@ -12,5 +12,6 @@ The plugin does not require you to make a switch to Octopus, to use it you can s
 This is a very early version, I have to optimise the update procedure as it is currently making too many API calls but this does not present a problem but is inelegant (the API is not throttled and the call rate is not excessive).  I intend to switch when I can in the current situation, and I will then incorporate the consumption data.  My goal with this will be to track actual historical cost for each 30 minute period, this will only be possible for the previous 24 Hours as Octopus do not publish consumption data real time.  This would be possible now if you have a energy monitor, but I do not.  The plugin has the configuration UI to enter your API Key, and for future logging capabilites.  These are not currently used, only your Postcode.  Error detection is limited, so please use this at your own risk and consider it a alpha version.
 
 Comments and feedback extremely welcome, via the Indigo Plugin Forum at 
+I am also issue tracking in this repository
 
 When I do switch I will share my referal code here, and we could both get a £50 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward.
