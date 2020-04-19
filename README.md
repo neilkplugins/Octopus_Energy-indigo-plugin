@@ -13,4 +13,4 @@ This is a very early version, I have to optimise the update procedure as it is c
 
 Comments and feedback extremely welcome, via the Indigo Plugin Forum at 
 
-When I do switch I will share my referall code here, and we could both get a £50 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward.
+When I do switch I will share my referal code here, and we could both get a £50 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward.
