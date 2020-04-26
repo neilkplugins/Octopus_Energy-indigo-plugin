@@ -27,8 +27,6 @@ PRODUCT_CODE="AGILE-18-02-21"
 # This is the upper rate cap for Agile Octopus, presumably this could change but it is currently not in the API
 # Maybe this should be a plugin config option, but if it doesn't change often then it adds complexity
 CAPPED_RATE = 35
-# Initialise the daily update flag
-daily_update = 0
 
 
 ################################################################################
@@ -128,7 +126,7 @@ class Plugin(indigo.PluginBase):
             else:
                 self.debugLog("Error in getting current tariffs")
 
-            # The standing charge, max and min values only need to be updated once a day
+            # The standing charge, max and min values only need to be updated once a day, so set the flag accordingly
             if str(utctoday) != device.states["UTC_Today"]:
                 self.debugLog("Updating daily values for max, min and standing charge")
                 update_daily_rate = True
@@ -140,7 +138,6 @@ class Plugin(indigo.PluginBase):
             # This is the current rate cap for Agile Octopus, min value should always be lower than this, currently hard coded in the plugin as not published by the api
             min_rate = CAPPED_RATE
             for rates in half_hourly_rates:
-                self.debugLog(rates)
                 sum_rates = sum_rates + rates["value_inc_vat"]
                 if rates["value_inc_vat"] >= max_rate:
                     max_rate = rates["value_inc_vat"]
