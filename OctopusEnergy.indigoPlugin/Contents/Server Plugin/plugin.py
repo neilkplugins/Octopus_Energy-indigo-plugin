@@ -82,7 +82,8 @@ class Plugin(indigo.PluginBase):
     def update(self,device):
         # The Tariff code is built from the Grid Supply Point (gsp) and the product code.  For the purposes of the plugin this is hardcoded to the agile offering
         # No need to vary this for the current version, but I will review in the future as it may be other tariffs than Agile may be of interest (even if they do not change every 30 mins)
-        TARIFF_CODE="E-1R-"+PRODUCT_CODE+"-"+self.pluginPrefs['gsp']
+        self.debugLog(device)
+        TARIFF_CODE="E-1R-"+PRODUCT_CODE+"-"+device.pluginProps['device_gsp']
         GET_STANDING_CHARGES = BASE_URL + "/products/" + PRODUCT_CODE + "/electricity-tariffs/" + TARIFF_CODE + "/standing-charges/"
         # utctoday is used as the baseline day for the min, max and average calculations.  Those updates will only run when the utc date changes (not GMT/BST)
         # Due to the way they API publishes the daily rates, I will force a refresh at 17:00 utc, as not all of the rates may have been available when the utc day changed)
@@ -187,44 +188,6 @@ class Plugin(indigo.PluginBase):
     # UI Validate, Plugin Preferences
     ########################################
     def validatePrefsConfigUi(self, valuesDict):
-        if not(valuesDict['Postcode']):
-            self.errorLog("Postcode Cannot Be Empty")
-            errorsDict = indigo.Dict()
-            errorsDict['Postcode'] = "Postcode Cannot Be Empty"
-            return (False, valuesDict, errorsDict)
-        try:
-            response = requests.get(BASE_URL+GET_GSP+valuesDict['Postcode'], timeout=1)
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-
-            self.debugLog("Http Error "+ str(err))
-            errorsDict = indigo.Dict()
-            errorsDict['Postcode'] = "Error validating with Octopus"
-            return (False, valuesDict, errorsDict)
-        except Exception as err:
-            self.debugLog("Other error"+err)
-            errorsDict = indigo.Dict()
-            errorsDict['Postcode'] = "Error validating with Octopus"
-            return (False, valuesDict, errorsDict)
-        else:
-            self.debugLog("Connected to Octopus Servers")
-        if response.status_code ==200:
-            gsp_json =  response.json()
-            if gsp_json['count']==0:
-                self.debugLog("GSP Not returned")
-                errorsDict = indigo.Dict()
-                errorsDict['Postcode'] = "GSP Not returned - Check Postcode"
-                return (False, valuesDict, errorsDict)
-            else:
-                gsp= gsp_json['results'][0]['group_id'][1]
-                self.debugLog("GSP is "+gsp)
-                self.pluginPrefs['gsp'] = gsp
-        else:
-            gsp = "Unknown API Error"
-            self.debugLog(response)
-            errorsDict = indigo.Dict()
-            errorsDict['Postcode'] = "Unknown Octopus API Error"
-            return (False, valuesDict, errorsDict)
         try:
             timeoutint=float(valuesDict['requeststimeout'])
         except:
@@ -256,8 +219,45 @@ class Plugin(indigo.PluginBase):
     # UI Validate, Device Config
     ########################################
     def validateDeviceConfigUi(self, valuesDict, typeId, device):
+	if not(valuesDict['Device_Postcode']):
+            self.errorLog("Postcode Cannot Be Empty")
+            errorsDict = indigo.Dict()
+            errorsDict['Device_Postcode'] = "Postcode Cannot Be Empty"
+            return (False, valuesDict, errorsDict)
+        try:
+            response = requests.get(BASE_URL+GET_GSP+valuesDict['Device_Postcode'], timeout=1)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
 
-        valuesDict['address'] = self.pluginPrefs["Postcode"]
+            self.debugLog("Http Error "+ str(err))
+            errorsDict = indigo.Dict()
+            errorsDict['Device_Postcode'] = "Error validating with Octopus"
+            return (False, valuesDict, errorsDict)
+        except Exception as err:
+            self.debugLog("Other error"+str(err))
+            errorsDict = indigo.Dict()
+            errorsDict['Device_Postcode'] = "Error validating with Octopus"
+            return (False, valuesDict, errorsDict)
+        else:
+            self.debugLog("Connected to Octopus Servers")
+        if response.status_code ==200:
+            gsp_json =  response.json()
+            if gsp_json['count']==0:
+                self.debugLog("GSP Not returned")
+                errorsDict = indigo.Dict()
+                errorsDict['Device_Postcode'] = "GSP Not returned - Check Postcode"
+                return (False, valuesDict, errorsDict)
+            else:
+                gsp= gsp_json['results'][0]['group_id'][1]
+                self.debugLog("GSP is "+gsp)
+                valuesDict['device_gsp'] = gsp
+        else:
+            gsp = "Unknown API Error"
+            self.debugLog(response)
+            errorsDict = indigo.Dict()
+            errorsDict['Device_Postcode'] = "Unknown Octopus API Error"
+            return (False, valuesDict, errorsDict)
+        valuesDict['address'] = valuesDict['Device_Postcode']
         self.debugLog(valuesDict)
         return (True, valuesDict)
 

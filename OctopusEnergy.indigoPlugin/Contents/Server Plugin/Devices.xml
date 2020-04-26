@@ -4,6 +4,9 @@
 	<Device type="custom" id="OctopusEnergy">
 		<Name>Octopus Energy Electricity Rates</Name>
 		<ConfigUI>
+			<Field id="Device_Postcode" type="textfield">
+			<Label>Enter the Postcode for the supply address:</Label>
+			</Field>
 			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
 				<Label>populate ui address field</Label>
 				<Description>duplicate of IP address to show in indigo UI</Description>

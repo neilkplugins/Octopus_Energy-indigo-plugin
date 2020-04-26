@@ -17,7 +17,7 @@
         <Label>Do you want to log daily price history</Label>
         <Description>Saves in logging folder</Description>
     </Field>
-    <Field type="checkbox" id="LogUsgae" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+    <Field type="checkbox" id="LogUsage" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
         <Label>Do you want to log usage history</Label>
         <Description>Saves in logging folder</Description>
     </Field>
@@ -28,12 +28,7 @@
 	
 	<Field id="simpleseparator2" type="separator">
 	</Field>
-	<Field id="Postcode" type="textfield">
-	<Label>Enter the Postcode for the supply address:</Label>
-	</Field>
 	
-	<Field id="simpleseparator3" type="separator">
-	</Field>
 	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
 		<Label>If you are having problems with the plugin (or you are instructed by support), you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
 	</Field>
