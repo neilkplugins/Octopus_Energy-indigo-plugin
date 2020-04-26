@@ -35,12 +35,16 @@
 			<TriggerLabel>Daily Average Rate</TriggerLabel>
 			<ControlPageLabel>Daily Average rate</ControlPageLabel>
             </State>
-            <State id="deviceLastUpdated">
+            <State id="Current_From_Period">
                 <ValueType>String</ValueType>
-                <TriggerLabel>Device Last Updated</TriggerLabel>
-                <ControlPageLabel>Device Last Updated</ControlPageLabel>
+                <TriggerLabel>From period for current tariff</TriggerLabel>
+                <ControlPageLabel>From period for current tariff</ControlPageLabel>
             </State>
-
+            <State id="UTC_Today">
+                <ValueType>String</ValueType>
+                <TriggerLabel>UTC Current Dat</TriggerLabel>
+                <ControlPageLabel>UTC Current Day</ControlPageLabel>
+            </State>
         </States>
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
 	</Device>
