@@ -72,7 +72,6 @@ class Plugin(indigo.PluginBase):
                 # this is currently configurable (it may be lower as a default the check can be quick without hitting the API so that the rate change happens close to minute 00 and minute 30)
                 # At present the polling frequency will determine the max number of seconds in a given period the tariff could be out of date
                 self.sleep(1 * pollingFreq )
-                self.debugLog(self.deviceList)
                 for deviceId in self.deviceList:
                     # call the update method with the device instance
                     self.update(indigo.devices[deviceId])
