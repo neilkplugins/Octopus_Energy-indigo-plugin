@@ -174,7 +174,7 @@ class Plugin(indigo.PluginBase):
             # Apply the hourly updates
             device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'uiValue' :str(current_tariff)+"p" })
             device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
-            device_state_append({ 'key': 'UTC_Today', 'value' : str(utctoday)})
+            device_states.append({ 'key': 'UTC_Today', 'value' : str(utctoday)})
             device.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOn)
             # Apply State Updates to Indigo Server
             device.updateStatesOnServer(device_states)
