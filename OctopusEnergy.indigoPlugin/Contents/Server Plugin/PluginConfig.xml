@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <PluginConfig>
-	
+
 	<Field id="simpleseparator1" type="separator">
 	</Field>
 	<Field type="checkbox" id="useOctopusAPI" defaultValue="false">
@@ -25,10 +25,16 @@
         <Label>Do you have Gas supplied by Octopus ?</Label>
         <Description>Saves in logging folder</Description>
     </Field>
-	
-	<Field id="simpleseparator2" type="separator">
+		<Field id="simpleseparator2" type="separator">
+		</Field>
+		<Field id="Capped_Rate" type="textfield" defaultValue="35">
+		<Label>Enter the Maximum rate per kWh in Pence </Label>
+		</Field>
+
+
+	<Field id="simpleseparator3" type="separator">
 	</Field>
-	
+
 	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
 		<Label>If you are having problems with the plugin (or you are instructed by support), you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
 	</Field>
@@ -50,6 +56,5 @@
 	<Field id="requeststimeout" type="textfield" defaultValue="1">
 	<Label>Enter timeout (seconds) for requests to the Octopus API:</Label>
 	</Field>
-	
+
 </PluginConfig>
- 

@@ -24,9 +24,7 @@ BASE_URL = "https://api.octopus.energy/v1"
 GET_GSP = "/industry/grid-supply-points/?postcode="
 # This is the product code for the Octopus Energy Agile Tariff which will return the 30 min rates when combined with a GSP
 PRODUCT_CODE="AGILE-18-02-21"
-# This is the upper rate cap for Agile Octopus, presumably this could change but it is currently not in the API
-# Maybe this should be a plugin config option, but if it doesn't change often then it adds complexity
-CAPPED_RATE = 35
+
 
 
 ################################################################################
@@ -46,8 +44,6 @@ class Plugin(indigo.PluginBase):
     def deviceStartComm(self, device):
         self.debugLog("Starting device: " + device.name)
         self.debugLog(str(device.id)+ " " + device.name)
-        self.debugLog(device.pluginProps)
-
         device.stateListOrDisplayStateIdChanged()
         if device.id not in self.deviceList:
             self.update(device)
@@ -82,7 +78,6 @@ class Plugin(indigo.PluginBase):
     def update(self,device):
         # The Tariff code is built from the Grid Supply Point (gsp) and the product code.  For the purposes of the plugin this is hardcoded to the agile offering
         # No need to vary this for the current version, but I will review in the future as it may be other tariffs than Agile may be of interest (even if they do not change every 30 mins)
-        self.debugLog(device)
         TARIFF_CODE="E-1R-"+PRODUCT_CODE+"-"+device.pluginProps['device_gsp']
         GET_STANDING_CHARGES = BASE_URL + "/products/" + PRODUCT_CODE + "/electricity-tariffs/" + TARIFF_CODE + "/standing-charges/"
         # utctoday is used as the baseline day for the min, max and average calculations.  Those updates will only run when the utc date changes (not GMT/BST)
@@ -135,8 +130,8 @@ class Plugin(indigo.PluginBase):
                 update_daily_rate = False
             sum_rates = 0
             max_rate = 0
-            # This is the current rate cap for Agile Octopus, min value should always be lower than this, currently hard coded in the plugin as not published by the api
-            min_rate = CAPPED_RATE
+            # This is the current rate cap for Agile Octopus, min value should always be lower than this, from the plugin config
+            min_rate = str(self.pluginPrefs['Capped_Rate'])
             for rates in half_hourly_rates:
                 sum_rates = sum_rates + rates["value_inc_vat"]
                 if rates["value_inc_vat"] >= max_rate:
@@ -149,6 +144,7 @@ class Plugin(indigo.PluginBase):
             average_rate = sum_rates / results_json['count']
             # Only apply updates if it is a new utc day, or once a day at 18:00Z which will be when the next days rates will be published
             if update_daily_rate or current_tariff_valid_period == str(utctoday)+"T18:00Z":
+                self.debugLog("Updating for new UTC Day or at 18:00Z UTC")
                 try:
                     response = requests.get(GET_STANDING_CHARGES, timeout=1)
                     response.raise_for_status()
