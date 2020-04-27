@@ -111,8 +111,6 @@ class Plugin(indigo.PluginBase):
                 self.debugLog("Http Error "+ str(err))
             except Exception as err:
                 self.debugLog("Other error"+str(err))
-            # else:
-    #     		self.debugLog("Connected to Octopus Servers")
             if response.status_code ==200:
                 results_json = response.json()
                 #self.debugLog(results_json)
@@ -208,7 +206,13 @@ class Plugin(indigo.PluginBase):
             errorsDict = indigo.Dict()
             errorsDict['requeststimeout'] = "Invalid entry for Requests Timeout - must be greater than 0"
             return (False, valuesDict, errorsDict)
-
+        try:
+            timeoutint=float(valuesDict['Capped_Rate'])
+        except:
+            self.errorLog("Invalid entry for  Capped Rate - must be a number")
+            errorsDict = indigo.Dict()
+            errorsDict['Capped_Rate'] = "Invalid entry for Capped Rate - must be a number"
+            return (False, valuesDict, errorsDict)
         return (True, valuesDict)
 
    ########################################
@@ -255,6 +259,7 @@ class Plugin(indigo.PluginBase):
             return (False, valuesDict, errorsDict)
         valuesDict['address'] = valuesDict['Device_Postcode']
         self.debugLog(valuesDict)
+        
         return (True, valuesDict)
 
 
