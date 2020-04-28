@@ -162,7 +162,9 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
-            if device.pluginProps['Log_Rates']:
+            # Write the CSV file out at 18:00 UTC and if the checkbox is ticked in the device config
+            # File name in the form 2020-04-28-devicename-Rates.csv in the folder from the plugin config
+            if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(utctoday)+"T18:00:00Z":
             	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+"-Rates.csv"
             	self.debugLog(filepath)
             	with open(filepath, 'w') as file:
