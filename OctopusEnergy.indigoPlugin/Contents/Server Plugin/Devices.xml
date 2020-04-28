@@ -7,6 +7,10 @@
 			<Field id="Device_Postcode" type="textfield">
 			<Label>Enter the Postcode for the supply address:</Label>
 			</Field>
+			<Field type="checkbox" id="Log_Rates" defaultValue="false">
+        <Label>Do you want to log daily price history in a daily CSV file?</Label>
+        <Description>Saves in logging folder</Description>
+        </Field>
 			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
 				<Label>populate ui address field</Label>
 				<Description>duplicate of IP address to show in indigo UI</Description>

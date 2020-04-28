@@ -13,6 +13,7 @@ import requests
 import json
 import time
 import datetime
+import csv
 
 ################################################################################
 # Globals
@@ -141,7 +142,7 @@ class Plugin(indigo.PluginBase):
                     current_tariff = float(rates["value_inc_vat"])
             average_rate = sum_rates / results_json['count']
             # Only apply updates if it is a new utc day, or once a day at 18:00Z which will be when the next days rates will be published
-            if update_daily_rate or current_tariff_valid_period == str(utctoday)+"T18:00Z":
+            if update_daily_rate or current_tariff_valid_period == str(utctoday)+"T18:00:00Z":
                 self.debugLog("Updating for new UTC Day or at 18:00Z UTC")
                 try:
                     response = requests.get(GET_STANDING_CHARGES, timeout=1)
@@ -161,7 +162,14 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
-
+            if device.pluginProps['Log_Rates']:
+            	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+".csv"
+            	self.debugLog(filepath)
+            	with open(filepath, 'w') as file:
+            		writer = csv.writer(file)
+            		writer.writerow(["Period", "Tariff"])
+            		for rates in half_hourly_rates:
+            			writer.writerow([rates['valid_from'],rates['value_inc_vat']])
             # Apply the hourly updates
             device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'uiValue' :str(current_tariff)+"p" })
             device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
@@ -172,6 +180,8 @@ class Plugin(indigo.PluginBase):
 
         else:
             self.debugLog("No Hourly Updates Required")
+            filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+".csv"
+            self.debugLog(filepath)
         return()
 
 

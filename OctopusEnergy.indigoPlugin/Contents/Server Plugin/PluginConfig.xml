@@ -7,21 +7,24 @@
         <Label>Do you have an Octopus Account and API Key:</Label>
         <Description>API Key is in "Account Page"</Description>
     </Field>
-    <Field id="OctopusEmail" type="textfield" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+    <Field id="OctopusEmail" type="textfield" >
 	<Label>Enter the email account for Octopus Energy:</Label>
 	</Field>
-	<Field id="OctopusAPIkey" type="textfield" visibleBindingId="useOctopusAPI" visibleBindingValue="true" >
+	<Field id="OctopusAPIkey" type="textfield" >
 	<Label>Enter the API Key for your Octopus Account</Label>
 	</Field>
-	<Field type="checkbox" id="LogPrices" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+	<Field type="checkbox" id="LogPrices" defaultValue="false">
         <Label>Do you want to log daily price history</Label>
         <Description>Saves in logging folder</Description>
     </Field>
-    <Field type="checkbox" id="LogUsage" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+    <Field type="textfield" id="LogFilePath">
+    <Label>Enter the file path to save log files</Label>
+    </Field>
+    <Field type="checkbox" id="LogUsage" defaultValue="false" >
         <Label>Do you want to log usage history</Label>
         <Description>Saves in logging folder</Description>
     </Field>
-    <Field type="checkbox" id="SupplyGas" defaultValue="false" visibleBindingId="useOctopusAPI" visibleBindingValue="true">
+    <Field type="checkbox" id="SupplyGas" defaultValue="false">
         <Label>Do you have Gas supplied by Octopus ?</Label>
         <Description>Saves in logging folder</Description>
     </Field>
