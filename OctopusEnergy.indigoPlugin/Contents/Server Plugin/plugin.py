@@ -180,8 +180,6 @@ class Plugin(indigo.PluginBase):
 
         else:
             self.debugLog("No Hourly Updates Required")
-            filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+".csv"
-            self.debugLog(filepath)
         return()
 
 
