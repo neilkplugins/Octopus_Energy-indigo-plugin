@@ -163,7 +163,7 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
             if device.pluginProps['Log_Rates']:
-            	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+".csv"
+            	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+"-Rates.csv"
             	self.debugLog(filepath)
             	with open(filepath, 'w') as file:
             		writer = csv.writer(file)

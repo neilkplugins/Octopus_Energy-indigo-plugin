@@ -1,44 +1,26 @@
 <?xml version="1.0"?>
 <PluginConfig>
 
-	<Field id="simpleseparator1" type="separator">
-	</Field>
-	<Field type="checkbox" id="useOctopusAPI" defaultValue="false">
-        <Label>Do you have an Octopus Account and API Key:</Label>
-        <Description>API Key is in "Account Page"</Description>
-    </Field>
-    <Field id="OctopusEmail" type="textfield" >
-	<Label>Enter the email account for Octopus Energy:</Label>
-	</Field>
-	<Field id="OctopusAPIkey" type="textfield" >
-	<Label>Enter the API Key for your Octopus Account</Label>
-	</Field>
-	<Field type="checkbox" id="LogPrices" defaultValue="false">
-        <Label>Do you want to log daily price history</Label>
-        <Description>Saves in logging folder</Description>
+	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
+	<Label>This will create a daily CSV file for rates and prior day gas and electricity usage.  Each rate or consumption device can enable the CSV creation in the device configuration</Label>
     </Field>
     <Field type="textfield" id="LogFilePath">
-    <Label>Enter the file path to save log files</Label>
+    <Label>Enter the file path to save daily CSV log files (enable per device)</Label>
     </Field>
-    <Field type="checkbox" id="LogUsage" defaultValue="false" >
-        <Label>Do you want to log usage history</Label>
-        <Description>Saves in logging folder</Description>
-    </Field>
-    <Field type="checkbox" id="SupplyGas" defaultValue="false">
-        <Label>Do you have Gas supplied by Octopus ?</Label>
-        <Description>Saves in logging folder</Description>
-    </Field>
-		<Field id="simpleseparator2" type="separator">
-		</Field>
-		<Field id="Capped_Rate" type="textfield" defaultValue="35">
-		<Label>Enter the Maximum rate per kWh in Pence </Label>
-		</Field>
-
-
 	<Field id="simpleseparator3" type="separator">
 	</Field>
+	<Field id="topLabel2" type="label" fontSize="small" fontColor="darkgray">
+	<Label> Octopus provide a maximum rate to charge for the Agile Tariff which could change over time, the default value is correct at the time of release but can be overidden here</Label>
+    </Field>
+	<Field id="Capped_Rate" type="textfield" defaultValue="35">
+	<Label>Enter the Maximum rate per kWh in Pence </Label>
+	</Field>
 
-	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
+
+	<Field id="simpleseparator5" type="separator">
+	</Field>
+
+	<Field id="topLabel3" type="label" fontSize="small" fontColor="darkgray">
 		<Label>If you are having problems with the plugin (or you are instructed by support), you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
 	</Field>
 	<Field id="showDebugInfo" type="checkbox">
