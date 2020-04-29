@@ -14,6 +14,7 @@ import json
 import time
 import datetime
 import csv
+import os
 
 ################################################################################
 # Globals
@@ -166,7 +167,8 @@ class Plugin(indigo.PluginBase):
             # File name in the form 2020-04-28-devicename-Rates.csv in the folder from the plugin config
             if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(utctoday)+"T18:00:00Z":
             	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+"-Rates.csv"
-            	self.debugLog(filepath)
+            	if self.pluginPrefs['LogFilePath'] == "":
+            		self.errorLog("No directory path specified in the Plugin Configuration to save the csv")
             	with open(filepath, 'w') as file:
             		writer = csv.writer(file)
             		writer.writerow(["Period", "Tariff"])
@@ -223,6 +225,12 @@ class Plugin(indigo.PluginBase):
             errorsDict = indigo.Dict()
             errorsDict['Capped_Rate'] = "Invalid entry for Capped Rate - must be a number"
             return (False, valuesDict, errorsDict)
+        if valuesDict['LogFilePath'] !="":
+        	if not os.path.isdir(valuesDict['LogFilePath']):
+        		errorsDict = indigo.Dict()
+        		errorsDict['LogFilePath'] = "Directory specified does not exist"
+        		self.errorLog(valuesDict['LogFilePath']+ " directory does not exist")
+        		return (False, valuesDict, errorsDict)	
         return (True, valuesDict)
 
    ########################################
