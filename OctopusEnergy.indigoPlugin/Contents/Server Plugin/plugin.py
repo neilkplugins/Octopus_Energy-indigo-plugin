@@ -3,7 +3,7 @@
 ####################
 # Copyright (c) 2020 neilk
 #
-# Based on the sample dimmer plugin and various vehicle plugins for Indigo
+# Based on the sample dimmer plugin 
 
 ################################################################################
 # Imports
@@ -62,7 +62,10 @@ class Plugin(indigo.PluginBase):
     ########################################
     def runConcurrentThread(self):
         self.debugLog("Starting concurrent thread")
-        pollingFreq = int(self.pluginPrefs['pollingFrequency'])
+        try:
+        	pollingFreq = int(self.pluginPrefs['pollingFrequency'])
+        except:
+        	pollingFreq = 60
 
         try:
             while True:
