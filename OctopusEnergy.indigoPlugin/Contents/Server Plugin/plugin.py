@@ -142,7 +142,7 @@ class Plugin(indigo.PluginBase):
                 if rates["value_inc_vat"] <= min_rate:
                     min_rate = rates["value_inc_vat"]
                 if rates['valid_from'] == current_tariff_valid_period:
-                    self.debugLog("Current Rate inc vat is "+str(rates["value_inc_vat"]))
+                    indigo.server.log("Current Rate inc vat is "+str(rates["value_inc_vat"]))
                     current_tariff = float(rates["value_inc_vat"])
             average_rate = sum_rates / results_json['count']
             # Only apply updates if it is a new utc day, or once a day at 18:00Z which will be when the next days rates will be published
@@ -186,7 +186,7 @@ class Plugin(indigo.PluginBase):
             device.updateStatesOnServer(device_states)
 
         else:
-            self.debugLog("No Hourly Updates Required")
+            self.debugLog("No Half Hourly Updates Required")
         return()
 
 
