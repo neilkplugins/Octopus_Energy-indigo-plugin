@@ -87,8 +87,12 @@ class Plugin(indigo.PluginBase):
         GET_STANDING_CHARGES = BASE_URL + "/products/" + PRODUCT_CODE + "/electricity-tariffs/" + TARIFF_CODE + "/standing-charges/"
         # utctoday is used as the baseline day for the min, max and average calculations.  Those updates will only run when the utc date changes (not GMT/BST)
         # Due to the way they API publishes the daily rates, I will force a refresh at 17:00 utc, as not all of the rates may have been available when the utc day changed)
-        utctoday =datetime.datetime.utcnow().date()
+        utctoday = datetime.datetime.utcnow().date()
         now = datetime.datetime.utcnow()
+        local_day = datetime.datetime.now().date()
+        #self.debugLog("Local Day"+str(local_day))
+        #self.debugLog("UTC Day"+str(utctoday))
+
         update_rate = False
         update_daily_rate = False
         # Rates are published from minute 00 to 30 and 30 to 00, work out which period we are in (0-29 mins first half, 30-59 second half)
@@ -113,9 +117,11 @@ class Plugin(indigo.PluginBase):
                 response = requests.get(GET_LOCAL_TARIFFS, timeout=1)
                 response.raise_for_status()
             except requests.exceptions.HTTPError as err:
-                self.debugLog("Http Error "+ str(err))
+                self.errorLog("Http Error "+ str(err))
+                return()
             except Exception as err:
-                self.debugLog("Other error"+str(err))
+                self.errorLog("Other error "+str(err))
+                return()
             if response.status_code ==200:
                 results_json = response.json()
                 #self.debugLog(results_json)
@@ -152,15 +158,15 @@ class Plugin(indigo.PluginBase):
                     response = requests.get(GET_STANDING_CHARGES, timeout=1)
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as err:
-                    self.debugLog("Http Error "+ str(err))
+                    self.errorLog("Http Error "+ str(err))
                 except Exception as err:
-                    self.debugLog("Other error"+err)
+                    self.errorLog("Other error"+err)
                 if response.status_code ==200:
                     standing_charge_json = response.json()
                     standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
                     self.debugLog("Standard Charge "+str(standing_charge_inc_vat))
                 else:
-                    self.debugLog("Error getting Standard Charges")
+                    self.errorLog("Error getting Standard Charges")
                 # Apply the daily upates if necessary
                 device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
                 device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
@@ -168,10 +174,17 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
             # Write the CSV file out at 18:00 UTC and if the checkbox is ticked in the device config
             # File name in the form 2020-04-28-devicename-Rates.csv in the folder from the plugin config
+            # Now defaults to the plugin prefs folder if an empty path is specified 
             if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(utctoday)+"T18:00:00Z":
-            	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+"-Rates.csv"
             	if self.pluginPrefs['LogFilePath'] == "":
-            		self.errorLog("No directory path specified in the Plugin Configuration to save the csv")
+            		self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
+            		DefaultCSVPath = "{}/Preferences/Plugins/{}".format(indigo.server.getInstallFolderPath(), self.pluginId)
+            		self.errorLog("Defaulting to "+DefaultCSVPath)
+            		
+            		self.pluginPrefs['LogFilePath']= DefaultCSVPath
+            		if not os.path.isdir(self.pluginPrefs['LogFilePath']):
+            			os.mkdir(self.pluginPrefs['LogFilePath'])
+            	filepath = self.pluginPrefs['LogFilePath']+"/"+str(utctoday)+"-"+device.name+"-Rates.csv"
             	with open(filepath, 'w') as file:
             		writer = csv.writer(file)
             		writer.writerow(["Period", "Tariff"])
@@ -233,7 +246,12 @@ class Plugin(indigo.PluginBase):
         		errorsDict = indigo.Dict()
         		errorsDict['LogFilePath'] = "Directory specified does not exist"
         		self.errorLog(valuesDict['LogFilePath']+ " directory does not exist")
-        		return (False, valuesDict, errorsDict)	
+        		return (False, valuesDict, errorsDict)
+        	if not os.access(valuesDict['LogFilePath'], os.W_OK):
+        		errorsDict = indigo.Dict()
+        		errorsDict['LogFilePath'] = "Directory specified is not writable"
+        		self.errorLog(valuesDict['LogFilePath']+ " directory is not writable")
+        		return (False, valuesDict, errorsDict)
         return (True, valuesDict)
 
    ########################################

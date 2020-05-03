@@ -32,7 +32,7 @@
 	<Field id="midLabel" type="label" fontSize="small" fontColor="darkgray">
 		<Label>Polling frequency to Connect to the Octopus Servers</Label>
 	</Field>
-	<Field id="pollingFrequency" type="textfield" defaultValue="60">
+	<Field id="pollingFrequency" type="textfield" defaultValue="30">
 	<Label>Enter Polling Frequency in Seconds:</Label>
 	</Field>
 	<Field id="midLabel2" type="label" fontSize="small" fontColor="darkgray">
