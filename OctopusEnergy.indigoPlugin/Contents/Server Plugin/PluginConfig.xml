@@ -10,7 +10,7 @@
 	<Field id="simpleseparator3" type="separator">
 	</Field>
 	<Field id="topLabel2" type="label" fontSize="small" fontColor="darkgray">
-	<Label> Octopus provide a maximum rate to charge for the Agile Tariff which could change over time, the default value is correct at the time of release but can be overidden here</Label>
+	<Label> Octopus provide a maximum rate for the Agile Tariff which could change over time, the default value is correct at the time of release but can be overidden here</Label>
     </Field>
 	<Field id="Capped_Rate" type="textfield" defaultValue="35">
 	<Label>Enter the Maximum rate per kWh in Pence </Label>
@@ -36,7 +36,7 @@
 	<Label>Enter Polling Frequency in Seconds:</Label>
 	</Field>
 	<Field id="midLabel2" type="label" fontSize="small" fontColor="darkgray">
-	<Label>Not sure if this is necessary but I see timeouts in the App</Label>
+	<Label>May not be necessary,  unless you see timeouts in the Event Log</Label>
 	</Field>
 	<Field id="requeststimeout" type="textfield" defaultValue="1">
 	<Label>Enter timeout (seconds) for requests to the Octopus API:</Label>

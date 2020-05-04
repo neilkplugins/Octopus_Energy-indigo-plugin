@@ -47,10 +47,10 @@
                 <TriggerLabel>From period for current tariff</TriggerLabel>
                 <ControlPageLabel>From period for current tariff</ControlPageLabel>
             </State>
-            <State id="UTC_Today">
+            <State id="API_Today">
                 <ValueType>String</ValueType>
-                <TriggerLabel>UTC Current Dat</TriggerLabel>
-                <ControlPageLabel>UTC Current Day</ControlPageLabel>
+                <TriggerLabel>The Date the API was last refreshed</TriggerLabel>
+                <ControlPageLabel>The Date the API was last refreshed</ControlPageLabel>
             </State>
         </States>
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
