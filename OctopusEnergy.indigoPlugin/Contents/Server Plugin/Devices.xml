@@ -24,8 +24,8 @@
             </State>
             <State id="Daily_Standing_Charge">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Daily Standard Charge</TriggerLabel>
-			<ControlPageLabel>Daily Standard Charge</ControlPageLabel>
+			<TriggerLabel>Daily Standing Charge</TriggerLabel>
+			<ControlPageLabel>Daily Standing Charge</ControlPageLabel>
             </State>
             <State id="Daily_Max_Rate">
 			<ValueType>String</ValueType>
