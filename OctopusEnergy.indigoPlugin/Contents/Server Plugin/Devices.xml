@@ -44,8 +44,8 @@
             </State>
             <State id="Yesterday_Standing_Charge">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Yesterday Standarding Charge</TriggerLabel>
-			<ControlPageLabel>Yesterday Standarding Charge</ControlPageLabel>
+			<TriggerLabel>Yesterday Standing Charge</TriggerLabel>
+			<ControlPageLabel>Yesterday Standing Charge</ControlPageLabel>
             </State>
             <State id="Yesterday_Max_Rate">
 			<ValueType>String</ValueType>
