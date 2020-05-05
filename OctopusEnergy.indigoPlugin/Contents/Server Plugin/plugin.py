@@ -83,6 +83,7 @@ class Plugin(indigo.PluginBase):
     def update(self,device):
 
     	# Renamed UTC_Today to API_Today in devices.xml as it is now always the current day and will show the date the API data was refreshed, this will ensure existing devices are refreshed
+        # and the additional yesterdays states
     	device.stateListOrDisplayStateIdChanged()
         # The Tariff code is built from the Grid Supply Point (gsp) and the product code.  For the purposes of the plugin this is hardcoded to the agile offering
         # No need to vary this for the current version, but I will review in the future as it may be other tariffs than Agile may be of interest (even if they do not change every 30 mins)
@@ -101,6 +102,7 @@ class Plugin(indigo.PluginBase):
         local_day = datetime.datetime.now().date()
         update_rate = False
         update_daily_rate = False
+        api_error = False
 
         ########################################################################
         # Check if the device state for the current tariff matches the "current period", if so no updates required
@@ -116,9 +118,9 @@ class Plugin(indigo.PluginBase):
         # Compare the current_tariff_valid_period with the one stored on the device to see if we need to update (we have crossed a half hour boundary)
         # If they match we can skip all of the updates and return, otherwise we update the period (and potentially the daily figures)
         if current_tariff_valid_period == device.states["Current_From_Period"]:
-            self.debugLog("No need to update Current "+current_tariff_valid_period+" Stored "+device.states["Current_From_Period"])
+            self.debugLog("No need to update Current "+current_tariff_valid_period+" Stored "+device.states["Current_From_Period"]+" for "+device.name)
         else:
-            self.debugLog("Need to Update Current "+current_tariff_valid_period+" Stored "+device.states["Current_From_Period"])
+            self.debugLog("Need to Update Current "+current_tariff_valid_period+" Stored "+device.states["Current_From_Period"]+" for "+device.name)
             update_rate = True
 
         ########################################################################
@@ -133,7 +135,7 @@ class Plugin(indigo.PluginBase):
             indigo.server.log("Refreshing Rate Information from the Octopus API for Device "+ device.name)
             update_daily_rate = True
         else:
-            self.debugLog("No Need to update daily - same utc day as last update "+device.name)
+            self.debugLog("No Need to update daily - same day as last update "+device.name)
             update_daily_rate = False
 
         ########################################################################
@@ -142,7 +144,7 @@ class Plugin(indigo.PluginBase):
         ########################################################################
 
 
-        # Create update dictionary that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
+        # Create update list that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
         device_states = []
 
 
@@ -154,10 +156,15 @@ class Plugin(indigo.PluginBase):
             # This will be used in the future when the consumption device is available
             ########################################################################
 
-            # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates only if the day has changed
+            # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
+            # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
 
-            if str(local_day) != device.states["API_Today"]:
+            if str(local_day) != device.states["API_Today"] and device.states["API_Today"] != "API Refresh Failed":
                 device.pluginProps['yesterday_rates'] = device.pluginProps.get('today_rates',"")
+                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str('Daily_Standing_Charge')+"p" })
+                device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : device.states['Daily_Average_Rate'] , 'decimalPlaces' : 4 })
+                device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : device.states['Daily_Max_Rate'] , 'decimalPlaces' : 4 })
+                device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
 
             # Now make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
 
@@ -165,46 +172,58 @@ class Plugin(indigo.PluginBase):
             self.debugLog(PERIOD)
             GET_LOCAL_TARIFFS = BASE_URL+"/products/"+PRODUCT_CODE+"/electricity-tariffs/"+TARIFF_CODE+"/standard-unit-rates/?"+PERIOD
             try:
-                response = requests.get(GET_LOCAL_TARIFFS, timeout=1)
+                response = requests.get(GET_LOCAL_TARIFFS, timeout=float(self.pluginPrefs['requeststimeout']))
                 response.raise_for_status()
             except requests.exceptions.HTTPError as err:
-                self.errorLog("Http Error "+ str(err))
-                self.setErrorStateOnServer("No Update")
-                return()
+                self.errorLog("Octopus API refresh failure, Http Error "+ str(err))
+                device_states.append({ 'key': 'API_Today', 'value' : "API Refresh Failed"})
+                device.setErrorStateOnServer("No Update")
+                api_error = True
             except Exception as err:
-                self.errorLog("Other error "+str(err))
-                self.setErrorStateOnServer("No Update")
-                return()
-            if response.status_code ==200:
-                results_json = response.json()
-                #self.debugLog(results_json)
-                half_hourly_rates = results_json['results']
-                #self.debugLog(half_hourly_rates)
-            else:
-                self.debugLog("Error in getting current tariffs")
+                self.errorLog("Octopus API refresh failure, Other error "+str(err))
+                device_states.append({ 'key': 'API_Today', 'value' : "API Refresh Failed"})
+                device.setErrorStateOnServer("No Update")
+                api_error = True
+            # If API request succeeded, then save the response, and update the "API_Today" device state
+            try:
+            	if response.status_code ==200:
+                	results_json = response.json()
+                	#self.debugLog(results_json)
+                	half_hourly_rates = results_json['results']
+                	# Update the device state to show the API update has run sucessfully
+                	device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
+                	#self.debugLog(half_hourly_rates)
+            # Catch all other possible failures
+            except:
+                self.errorLog("Octopus API Refresh, Error in getting current tariffs")
+                device_states.append({ 'key': 'API_Today', 'value' : "API Refresh Failed"})
+                device.setErrorStateOnServer("No Update")
 
             ########################################################################
             # Iterate through the rate retured and calculate the
             # This will be used in the future when the consumption device is available
             ########################################################################
 
-            sum_rates = 0
-            max_rate = 0
-            stored_rates=indigo.Dict()
-            # This is the current rate cap for Agile Octopus, min value should always be lower than this, from the plugin config
-            min_rate = str(self.pluginPrefs['Capped_Rate'])
-            for rates in half_hourly_rates:
-                sum_rates = sum_rates + rates["value_inc_vat"]
-                if rates["value_inc_vat"] >= max_rate:
-                    max_rate = rates["value_inc_vat"]
-                if rates["value_inc_vat"] <= min_rate:
-                    min_rate = rates["value_inc_vat"]
-            average_rate = sum_rates / results_json['count']
+            if not api_error:
+            	sum_rates = 0
+            	max_rate = 0
+            	stored_rates=indigo.Dict()
+            	# This is the current rate cap for Agile Octopus, min value should always be lower than this, from the plugin config
+            	min_rate = str(self.pluginPrefs['Capped_Rate'])
+            	for rates in half_hourly_rates:
+                	sum_rates = sum_rates + rates["value_inc_vat"]
+                	if rates["value_inc_vat"] >= max_rate:
+                		max_rate = rates["value_inc_vat"]
+                	if rates["value_inc_vat"] <= min_rate:
+                		min_rate = rates["value_inc_vat"]
+            	average_rate = sum_rates / results_json['count']
 
             # Store the JSON response to the device so that the API doesn't need to be called every 30 mins
-            updatedProps=device.pluginProps
-            updatedProps['today_rates'] = json.dumps(half_hourly_rates)
-            device.replacePluginPropsOnServer(updatedProps)
+            if not api_error:
+            	updatedProps=device.pluginProps
+            	updatedProps['today_rates'] = json.dumps(half_hourly_rates)
+            	device.replacePluginPropsOnServer(updatedProps)
+            	
             self.debugLog(device.pluginProps)
 
             ########################################################################
@@ -213,18 +232,18 @@ class Plugin(indigo.PluginBase):
             ########################################################################
 
             try:
-                response = requests.get(GET_STANDING_CHARGES, timeout=1)
+                response = requests.get(GET_STANDING_CHARGES, timeout=float(self.pluginPrefs['requeststimeout']))
                 response.raise_for_status()
             except requests.exceptions.HTTPError as err:
-                self.errorLog("Http Error "+ str(err))
+                self.errorLog("Octopus API - Standing Charge Http Error "+ str(err))
             except Exception as err:
-                self.errorLog("Other error"+err)
+                self.errorLog("Octopus API - Standing Charge Other error"+err)
             if response.status_code ==200:
                 standing_charge_json = response.json()
                 standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
                 self.debugLog("Standard Charge "+str(standing_charge_inc_vat))
             else:
-                self.errorLog("Error getting Standard Charges")
+                self.errorLog("Octopus API - Standing Chargee Error getting Standard Charges")
 
             # Append the updates to the updated states dict
 
@@ -242,13 +261,17 @@ class Plugin(indigo.PluginBase):
 
         if update_rate:
             for rates in json.loads(device.pluginProps['today_rates']):
+                # Find the record with the matching current tariff period in the saved JSON
                 if rates['valid_from'] == current_tariff_valid_period:
                     indigo.server.log("Current Rate inc vat is "+str(rates["value_inc_vat"]))
                     current_tariff = float(rates["value_inc_vat"])
 
+            ########################################################################
             # Write the CSV file out at 18:00 UTC and if the checkbox is ticked in the device config
             # File name in the form 2020-04-28-devicename-Rates.csv in the folder from the plugin config
             # Now defaults to the plugin prefs folder if an empty path is specified
+            ########################################################################
+
             if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(local_day)+"T17:00:00Z":
             	if self.pluginPrefs['LogFilePath'] == "":
             		self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
@@ -264,20 +287,26 @@ class Plugin(indigo.PluginBase):
             		writer.writerow(["Period", "Tariff"])
             		for rates in json.loads(device.pluginProps['today_rates']):
             			writer.writerow([rates['valid_from'],rates['value_inc_vat']])
-            # Append the hourly updates to the update dictionary
-            device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
-            device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
 
+            ########################################################################
+            # Append the half hourly updates to the update dictionary but not if an API refresh failed (which will force future attempts to refresh)
+            ########################################################################
+
+            if not api_error :
+                device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
+                device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
+
+            ########################################################################
             # Apply State Updates to Indigo Server
+            ########################################################################
             device.updateStatesOnServer(device_states)
 
-        else:
-            self.debugLog("No Half Hourly Updates Required")
+        ########################################################################
+        # Nothing else needs to be done for this update, return to runConcurrentThread
+        ########################################################################
+
+        self.debugLog("Update cycle complete for "+ device.name )
         return()
-
-
-
-
 
     ########################################
     # UI Validate, Plugin Preferences
@@ -337,21 +366,21 @@ class Plugin(indigo.PluginBase):
             errorsDict['Device_Postcode'] = "Postcode Cannot Be Empty"
             return (False, valuesDict, errorsDict)
         try:
-            response = requests.get(BASE_URL+GET_GSP+valuesDict['Device_Postcode'], timeout=1)
+            response = requests.get(BASE_URL+GET_GSP+valuesDict['Device_Postcode'], timeout=float(self.pluginPrefs['requeststimeout']))
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
 
             self.debugLog("Http Error "+ str(err))
             errorsDict = indigo.Dict()
-            errorsDict['Device_Postcode'] = "Error validating with Octopus"
+            errorsDict['Device_Postcode'] = "API Error validating with Octopus"
             return (False, valuesDict, errorsDict)
         except Exception as err:
             self.debugLog("Other error"+str(err))
             errorsDict = indigo.Dict()
-            errorsDict['Device_Postcode'] = "Error validating with Octopus"
+            errorsDict['Device_Postcode'] = "API Error validating with Octopus"
             return (False, valuesDict, errorsDict)
         else:
-            self.debugLog("Connected to Octopus Servers")
+            self.debugLog("API sucessfully Connected to Octopus Servers")
         if response.status_code ==200:
             gsp_json =  response.json()
             if gsp_json['count']==0:

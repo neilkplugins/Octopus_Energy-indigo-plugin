@@ -42,6 +42,26 @@
 			<TriggerLabel>Daily Average Rate</TriggerLabel>
 			<ControlPageLabel>Daily Average rate</ControlPageLabel>
             </State>
+            <State id="Yesterday_Standing_Charge">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Standarding Charge</TriggerLabel>
+			<ControlPageLabel>Yesterday Standarding Charge</ControlPageLabel>
+            </State>
+            <State id="Yesterday_Max_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Yesterday Max Rate</TriggerLabel>
+			<ControlPageLabel>Yesterday Max rate</ControlPageLabel>
+            </State>
+            <State id="Yesterday_Min_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Yesterday Min Rate</TriggerLabel>
+			<ControlPageLabel>Yesterday Min rate</ControlPageLabel>
+            </State>
+            <State id="Yesterday_Average_Rate">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Yesterday Average Rate</TriggerLabel>
+			<ControlPageLabel>Yesterday Average rate</ControlPageLabel>
+            </State>
             <State id="Current_From_Period">
                 <ValueType>String</ValueType>
                 <TriggerLabel>From period for current tariff</TriggerLabel>
