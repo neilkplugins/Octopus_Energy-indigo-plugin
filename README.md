@@ -18,4 +18,4 @@ I am also issue tracking in this repository
 
 Documentation at https://github.com/neilkplugins/Octopus_Energy-indigo-plugin/wiki
 
-When I do switch I will share my referal code here, and we could both get a £50 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward.
+I have started my switch and if you do so then please use my referall code https://share.octopus.energy/cute-peak-364 , and we could both get a £100 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward once they hit my account.
