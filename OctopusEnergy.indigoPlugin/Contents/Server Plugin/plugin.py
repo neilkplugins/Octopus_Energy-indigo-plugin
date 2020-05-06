@@ -147,26 +147,13 @@ class Plugin(indigo.PluginBase):
         # Create update list that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
         device_states = []
 
+        self.debugLog(device.pluginProps)
 
 
         if update_daily_rate:
 
-            ########################################################################
-            # Save yesterdays rates date into plugin props (the saved JSON of the daily rates)
-            # This will be used in the future when the consumption device is available
-            ########################################################################
 
-            # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
-            # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
-
-            if str(local_day) != device.states["API_Today"] and device.states["API_Today"] != "API Refresh Failed":
-                device.pluginProps['yesterday_rates'] = device.pluginProps.get('today_rates',"")
-                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str('Daily_Standing_Charge')+"p" })
-                device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : device.states['Daily_Average_Rate'] , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : device.states['Daily_Max_Rate'] , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
-
-            # Now make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
+            # Make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
 
             PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
             self.debugLog(PERIOD)
@@ -223,8 +210,24 @@ class Plugin(indigo.PluginBase):
             	updatedProps=device.pluginProps
             	updatedProps['today_rates'] = json.dumps(half_hourly_rates)
             	device.replacePluginPropsOnServer(updatedProps)
-            	
-            self.debugLog(device.pluginProps)
+
+            ########################################################################
+            # Save yesterdays rates date into plugin props (the saved JSON of the daily rates)
+            # This will be used in the future when the consumption device is available
+            ########################################################################
+
+            # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
+            # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
+
+            if str(local_day) != device.states["API_Today"] and device.states["API_Today"] != "API Refresh Failed":
+                new_props = device.pluginProps
+                new_props['yesterday_rates'] = new_props['today_rates']
+                device.replacePluginPropsOnServer(new_props)
+                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str('Daily_Standing_Charge')+"p" })
+                device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : device.states['Daily_Average_Rate'] , 'decimalPlaces' : 4 })
+                device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : device.states['Daily_Max_Rate'] , 'decimalPlaces' : 4 })
+                device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
+                self.debugLog("Updating yesterday rates")
 
             ########################################################################
             # Update the standing charge
@@ -243,7 +246,7 @@ class Plugin(indigo.PluginBase):
                 standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
                 self.debugLog("Standard Charge "+str(standing_charge_inc_vat))
             else:
-                self.errorLog("Octopus API - Standing Chargee Error getting Standard Charges")
+                self.errorLog("Octopus API - Standing Charge Error getting Standard Charges")
 
             # Append the updates to the updated states dict
 
