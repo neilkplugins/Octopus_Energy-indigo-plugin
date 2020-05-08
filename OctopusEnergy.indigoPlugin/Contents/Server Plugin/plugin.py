@@ -260,9 +260,9 @@ class Plugin(indigo.PluginBase):
             if response.status_code ==200:
                 standing_charge_json = response.json()
                 standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
-                self.debugLog("Standard Charge "+str(standing_charge_inc_vat))
+                self.debugLog("Standing Charge "+str(standing_charge_inc_vat))
             else:
-                self.errorLog("Octopus API - Standing Charge Error getting Standard Charges")
+                self.errorLog("Octopus API - Standing Charge Error getting Standing Charges")
 
             # Append the updates to the updated states dict
 
