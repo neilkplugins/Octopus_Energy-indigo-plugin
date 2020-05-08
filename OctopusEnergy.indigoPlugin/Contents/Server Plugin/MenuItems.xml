@@ -1,4 +1,12 @@
 <MenuItems>
+	<MenuItem id="dumprates">
+        <Name>Write All Rate Information to the Event Log for All Devices</Name>
+        <CallbackMethod>logDumpRates</CallbackMethod>
+    </MenuItem>   
+	<MenuItem id="dumpall">
+        <Name>Write All Device Information to the Event Log for All Devices</Name>
+        <CallbackMethod>logDumpRawData</CallbackMethod>
+    </MenuItem>   
 	<MenuItem id="toggleDebug">
 		<Name>Toggle Debugging</Name>
         <CallbackMethod>toggleDebugging</CallbackMethod>

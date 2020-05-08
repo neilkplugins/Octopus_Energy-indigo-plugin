@@ -72,6 +72,11 @@
                 <TriggerLabel>The Date the API was last refreshed</TriggerLabel>
                 <ControlPageLabel>The Date the API was last refreshed</ControlPageLabel>
             </State>
+            <State id="API_Afternoon_Refresh">
+                <ValueType boolType="TrueFalse">Boolean</ValueType>
+                <TriggerLabel>Has the afternoon refresh completed?</TriggerLabel>
+                <ControlPageLabel>Has the API Refreshed in the afternoon</ControlPageLabel>
+            </State>
         </States>
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
 	</Device>

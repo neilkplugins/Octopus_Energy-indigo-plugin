@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 
 <Actions>
-	<Action id="RefreshCurrentRate" deviceFilter="self">
-		<Name>Refresh Current Electricity Rate</Name>
-		<CallbackMethod>refreshRate</CallbackMethod>
+	<Action id="todayToFile" deviceFilter="self" uiPath="DeviceActions">
+		<Name>Write todays rates to file</Name>
+		<CallbackMethod>todayToFile</CallbackMethod>
 	</Action>
-	<Action id="RefreshDailyRates" deviceFilter="self">
-		<Name>Refresh Daily 30 minutes Rates</Name>
-		<CallbackMethod>refreshDayRates</CallbackMethod>
+	<Action id="yesterdayToFile" deviceFilter="self" uiPath="DeviceActions">
+		<Name>Write yesterdays rates to file</Name>
+		<CallbackMethod>yesterdayToFile</CallbackMethod>
 	</Action>
 </Actions>

@@ -143,7 +143,7 @@ class Plugin(indigo.PluginBase):
             self.debugLog("No Need to update daily - same day as last update "+device.name)
             update_daily_rate = False
         
-        if current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+        if current_tariff_valid_period == str(local_day)+"T17:00:00Z" and device.states['API_Afternoon_Refresh'] == False:
             indigo.server.log("Refreshing the Afternoon Daily Rate Update from the Octopus API for Device "+ device.name)
             update_afternoon_refresh = True
         else:
@@ -168,7 +168,6 @@ class Plugin(indigo.PluginBase):
 
             # Make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
 
-            self.debugLog("Then into update daily rate")
             PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
             self.debugLog(PERIOD)
             GET_LOCAL_TARIFFS = BASE_URL+"/products/"+PRODUCT_CODE+"/electricity-tariffs/"+TARIFF_CODE+"/standard-unit-rates/?"+PERIOD
@@ -194,6 +193,8 @@ class Plugin(indigo.PluginBase):
                 	# Update the device state to show the API update has run sucessfully
                 	device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
                 	self.debugLog("Got the rates OK")
+                	if current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+                		device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : True })
             # Catch all other possible failures
             except:
                 self.errorLog("Octopus API Refresh, Error in getting current tariffs")
@@ -241,6 +242,7 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : device.states['Daily_Average_Rate'] , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : device.states['Daily_Max_Rate'] , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
+                device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : False })
                 self.debugLog("Updating yesterday rates")
 
             ########################################################################
@@ -433,3 +435,62 @@ class Plugin(indigo.PluginBase):
             indigo.server.log("Turning on debug logging")
             self.pluginPrefs["showDebugInfo"] = True
         self.debug = not self.debug
+    
+    def logDumpRawData(self):
+    	for deviceId in self.deviceList:
+    		self.debugLog(indigo.devices[deviceId])
+    
+    def logDumpRates(self):
+    	for deviceId in self.deviceList:
+    		self.debugLog(indigo.devices[deviceId].name+" Today")
+    		self.debugLog("Period , Tariff")
+    		for rates in json.loads(indigo.devices[deviceId].pluginProps['today_rates']):
+    			self.debugLog(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+    		self.debugLog("Yesterday")
+    		self.debugLog("Period , Tariff")
+    		for rates in json.loads(indigo.devices[deviceId].pluginProps['yesterday_rates']):
+    			self.debugLog(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+        
+    ########################################
+    # Action Methods
+    ########################################
+    
+    # Write Todays rates to file 
+    def todayToFile(self,pluginAction, device):
+    	local_day = datetime.datetime.now().date()
+    	if self.pluginPrefs['LogFilePath'] == "":
+    		self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
+    		DefaultCSVPath = "{}/Preferences/Plugins/{}".format(indigo.server.getInstallFolderPath(), self.pluginId)
+    		self.errorLog("Defaulting to "+DefaultCSVPath)
+    		self.pluginPrefs['LogFilePath']= DefaultCSVPath
+    	if not os.path.isdir(self.pluginPrefs['LogFilePath']):
+    		os.mkdir(self.pluginPrefs['LogFilePath'])
+    	filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-Action-Today-Rates.csv"
+    	with open(filepath, 'w') as file:
+    		writer = csv.writer(file)
+    		writer.writerow(["Period", "Tariff"])
+    		for rates in json.loads(device.pluginProps['today_rates']):
+    			writer.writerow([rates['valid_from'],rates['value_inc_vat']])
+    	indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
+    	return()
+    
+    # Write Yesterdays rates to file 
+    def yesterdayToFile(self,pluginAction, device):
+    	local_day = datetime.datetime.now().date()
+    	if self.pluginPrefs['LogFilePath'] == "":
+    		self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
+    		DefaultCSVPath = "{}/Preferences/Plugins/{}".format(indigo.server.getInstallFolderPath(), self.pluginId)
+    		self.errorLog("Defaulting to "+DefaultCSVPath)
+    		self.pluginPrefs['LogFilePath']= DefaultCSVPath
+    	if not os.path.isdir(self.pluginPrefs['LogFilePath']):
+    		os.mkdir(self.pluginPrefs['LogFilePath'])
+    	filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-Action-Yesterday-Rates.csv"
+    	with open(filepath, 'w') as file:
+    		writer = csv.writer(file)
+    		writer.writerow(["Period", "Tariff"])
+    		for rates in json.loads(device.pluginProps['yesterday_rates']):
+    			writer.writerow([rates['valid_from'],rates['value_inc_vat']])
+    	indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
+    	return()
+    	
+    	
