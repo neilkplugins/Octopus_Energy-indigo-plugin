@@ -84,7 +84,11 @@ class Plugin(indigo.PluginBase):
 
     	# Renamed UTC_Today to API_Today in devices.xml as it is now always the current day and will show the date the API data was refreshed, this will ensure existing devices are refreshed
         # and the additional yesterdays states
+        
+        
     	device.stateListOrDisplayStateIdChanged()
+    	
+    	
         # The Tariff code is built from the Grid Supply Point (gsp) and the product code.  For the purposes of the plugin this is hardcoded to the agile offering
         # No need to vary this for the current version, but I will review in the future as it may be other tariffs than Agile may be of interest (even if they do not change every 30 mins)
         TARIFF_CODE="E-1R-"+PRODUCT_CODE+"-"+device.pluginProps['device_gsp']
@@ -102,6 +106,7 @@ class Plugin(indigo.PluginBase):
         local_day = datetime.datetime.now().date()
         update_rate = False
         update_daily_rate = False
+        update_afternoon_refresh = False
         api_error = False
 
         ########################################################################
@@ -132,11 +137,20 @@ class Plugin(indigo.PluginBase):
         ########################################################################
 
         if str(local_day) != device.states["API_Today"] or current_tariff_valid_period == str(local_day)+"T17:00:00Z":
-            indigo.server.log("Refreshing Rate Information from the Octopus API for Device "+ device.name)
+            indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
             update_daily_rate = True
         else:
             self.debugLog("No Need to update daily - same day as last update "+device.name)
             update_daily_rate = False
+        
+        if current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+            indigo.server.log("Refreshing the Afternoon Daily Rate Update from the Octopus API for Device "+ device.name)
+            update_afternoon_refresh = True
+        else:
+            self.debugLog("No Need for the Afternoon refresh - it is not 17:00Z  for "+device.name)
+            update_afternoon_refresh = False
+            
+        
 
         ########################################################################
         # Save yesterdays rates date into plugin props (the saved JSON of the daily rates)
@@ -147,14 +161,14 @@ class Plugin(indigo.PluginBase):
         # Create update list that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
         device_states = []
 
-        self.debugLog(device.pluginProps)
 
 
-        if update_daily_rate:
+        if update_daily_rate or update_afternoon_refresh:
 
 
             # Make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
 
+            self.debugLog("Then into update daily rate")
             PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
             self.debugLog(PERIOD)
             GET_LOCAL_TARIFFS = BASE_URL+"/products/"+PRODUCT_CODE+"/electricity-tariffs/"+TARIFF_CODE+"/standard-unit-rates/?"+PERIOD
@@ -179,7 +193,7 @@ class Plugin(indigo.PluginBase):
                 	half_hourly_rates = results_json['results']
                 	# Update the device state to show the API update has run sucessfully
                 	device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
-                	#self.debugLog(half_hourly_rates)
+                	self.debugLog("Got the rates OK")
             # Catch all other possible failures
             except:
                 self.errorLog("Octopus API Refresh, Error in getting current tariffs")
@@ -219,11 +233,11 @@ class Plugin(indigo.PluginBase):
             # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
             # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
 
-            if str(local_day) != device.states["API_Today"] and device.states["API_Today"] != "API Refresh Failed":
+            if update_daily_rate and device.states["API_Today"] != "API Refresh Failed":
                 new_props = device.pluginProps
                 new_props['yesterday_rates'] = new_props['today_rates']
                 device.replacePluginPropsOnServer(new_props)
-                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str('Daily_Standing_Charge')+"p" })
+                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str(device.states['Daily_Standing_Charge'])+"p" })
                 device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : device.states['Daily_Average_Rate'] , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : device.states['Daily_Max_Rate'] , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
@@ -275,7 +289,7 @@ class Plugin(indigo.PluginBase):
             # Now defaults to the plugin prefs folder if an empty path is specified
             ########################################################################
 
-            if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+            if device.pluginProps['Log_Rates'] and current_tariff_valid_period == str(local_day)+"T18:00:00Z":
             	if self.pluginPrefs['LogFilePath'] == "":
             		self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
             		DefaultCSVPath = "{}/Preferences/Plugins/{}".format(indigo.server.getInstallFolderPath(), self.pluginId)
@@ -302,7 +316,7 @@ class Plugin(indigo.PluginBase):
             ########################################################################
             # Apply State Updates to Indigo Server
             ########################################################################
-            device.updateStatesOnServer(device_states)
+        device.updateStatesOnServer(device_states)
 
         ########################################################################
         # Nothing else needs to be done for this update, return to runConcurrentThread
