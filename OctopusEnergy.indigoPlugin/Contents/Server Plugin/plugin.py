@@ -438,18 +438,18 @@ class Plugin(indigo.PluginBase):
     
     def logDumpRawData(self):
     	for deviceId in self.deviceList:
-    		self.debugLog(indigo.devices[deviceId])
+    		indigo.server.log(indigo.devices[deviceId])
     
     def logDumpRates(self):
     	for deviceId in self.deviceList:
-    		self.debugLog(indigo.devices[deviceId].name+" Today")
-    		self.debugLog("Period , Tariff")
+    		indigo.server.log(indigo.devices[deviceId].name+" Today")
+    		indigo.server.log("Period , Tariff")
     		for rates in json.loads(indigo.devices[deviceId].pluginProps['today_rates']):
-    			self.debugLog(rates['valid_from']+" , "+str(rates['value_inc_vat']))
-    		self.debugLog("Yesterday")
-    		self.debugLog("Period , Tariff")
+    			indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+    		indigo.server.log("Yesterday")
+    		indigo.server.log("Period , Tariff")
     		for rates in json.loads(indigo.devices[deviceId].pluginProps['yesterday_rates']):
-    			self.debugLog(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+    			indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
         
     ########################################
     # Action Methods
