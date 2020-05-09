@@ -137,7 +137,6 @@ class Plugin(indigo.PluginBase):
         ########################################################################
 
         if str(local_day) != device.states["API_Today"] or current_tariff_valid_period == str(local_day)+"T17:00:00Z":
-            indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
             update_daily_rate = True
         else:
             self.debugLog("No Need to update daily - same day as last update "+device.name)
@@ -147,7 +146,7 @@ class Plugin(indigo.PluginBase):
             indigo.server.log("Refreshing the Afternoon Daily Rate Update from the Octopus API for Device "+ device.name)
             update_afternoon_refresh = True
         else:
-            self.debugLog("No Need for the Afternoon refresh - it is not 17:00Z  for "+device.name)
+            self.debugLog("No Need for the Afternoon refresh - it is not 17:00Z or it has been done  for "+device.name)
             update_afternoon_refresh = False
             
         
@@ -163,10 +162,11 @@ class Plugin(indigo.PluginBase):
 
 
 
-        if update_daily_rate or update_afternoon_refresh:
+        if (update_daily_rate or update_afternoon_refresh)  and update_rate:
 
 
             # Make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
+            indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
 
             PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
             self.debugLog(PERIOD)
@@ -194,6 +194,7 @@ class Plugin(indigo.PluginBase):
                 	device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
                 	self.debugLog("Got the rates OK")
                 	if current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+                		self.debugLog("Setting Afternoon refresh done to device state")
                 		device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : True })
             # Catch all other possible failures
             except:
@@ -234,7 +235,7 @@ class Plugin(indigo.PluginBase):
             # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
             # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
 
-            if update_daily_rate and device.states["API_Today"] != "API Refresh Failed":
+            if update_daily_rate and device.states["API_Today"] != "API Refresh Failed" and not update_afternoon_refresh and update_rate:
                 new_props = device.pluginProps
                 new_props['yesterday_rates'] = new_props['today_rates']
                 device.replacePluginPropsOnServer(new_props)
@@ -244,6 +245,8 @@ class Plugin(indigo.PluginBase):
                 device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : device.states['Daily_Min_Rate'] , 'decimalPlaces' : 4 })
                 device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : False })
                 self.debugLog("Updating yesterday rates")
+            else:
+            	self.debugLog("Not updating yesterdays data")
 
             ########################################################################
             # Update the standing charge
