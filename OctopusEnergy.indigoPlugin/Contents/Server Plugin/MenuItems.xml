@@ -4,7 +4,7 @@
         <CallbackMethod>logDumpRates</CallbackMethod>
     </MenuItem>   
 	<MenuItem id="dumpall">
-        <Name>Write All Device Information to the Event Log for All Devices</Name>
+        <Name>Write All Device Information to the Debug Log for All Devices (debug needs to be enabled)</Name>
         <CallbackMethod>logDumpRawData</CallbackMethod>
     </MenuItem>   
 	<MenuItem id="toggleDebug">

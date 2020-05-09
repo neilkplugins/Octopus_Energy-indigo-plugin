@@ -438,7 +438,7 @@ class Plugin(indigo.PluginBase):
     
     def logDumpRawData(self):
     	for deviceId in self.deviceList:
-    		indigo.server.log(indigo.devices[deviceId])
+    		self.debugLog(indigo.devices[deviceId].pluginProps)
     
     def logDumpRates(self):
     	for deviceId in self.deviceList:
