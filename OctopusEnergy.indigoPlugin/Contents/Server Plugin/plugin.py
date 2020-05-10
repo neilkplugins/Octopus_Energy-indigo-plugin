@@ -104,6 +104,7 @@ class Plugin(indigo.PluginBase):
         now = datetime.datetime.utcnow()
         # But calculate the applicable day using local time and the API will automatically adjust if it is BST and will ensure max, min and average align to the local time
         local_day = datetime.datetime.now().date()
+        local_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=1)
         update_rate = False
         update_daily_rate = False
         update_afternoon_refresh = False
@@ -136,11 +137,16 @@ class Plugin(indigo.PluginBase):
         # Will now check if the daily updates are needed by comparing to the last day stored in the device state "API_Today"
         ########################################################################
 
-        if str(local_day) != device.states["API_Today"] or current_tariff_valid_period == str(local_day)+"T17:00:00Z":
+        if str(local_day) != device.states["API_Today"]:
             update_daily_rate = True
         else:
             self.debugLog("No Need to update daily - same day as last update "+device.name)
             update_daily_rate = False
+            
+        ########################################################################
+        # Now check if it is 17:00Z and if the afternoon update has been completed
+        # If it is 17:00Z and the update has not been done then set to True
+        ########################################################################
         
         if current_tariff_valid_period == str(local_day)+"T17:00:00Z" and device.states['API_Afternoon_Refresh'] == False:
             indigo.server.log("Refreshing the Afternoon Daily Rate Update from the Octopus API for Device "+ device.name)
@@ -149,23 +155,26 @@ class Plugin(indigo.PluginBase):
             self.debugLog("No Need for the Afternoon refresh - it is not 17:00Z or it has been done  for "+device.name)
             update_afternoon_refresh = False
             
-        
-
-        ########################################################################
-        # Save yesterdays rates date into plugin props (the saved JSON of the daily rates)
-        # This will be used in the future when the consumption device is available
-        ########################################################################
-
+		########################################################################
+        # Now start doing the various updates based on the conditions
+        ########################################################################        
 
         # Create update list that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
         device_states = []
 
-
-
+        ########################################################################
+        # The rates should only need to be updated against the API at 00:00 "OR" at 17:00Z
+        # This should only be done once per 30 min period (so update rate also needs to be true)
+        # As this will only be true for the first update cycle every 30 mins
+        ########################################################################
+        
         if (update_daily_rate or update_afternoon_refresh)  and update_rate:
+        
+        	########################################################################
+        	# Now Make the API calls
+        	########################################################################        
+        
 
-
-            # Make the call to the Octopus api to collect the 46 (at midnight) or 48 (in the 17:00 UTC call) rates for the day
             indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
 
             PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
@@ -204,7 +213,7 @@ class Plugin(indigo.PluginBase):
 
             ########################################################################
             # Iterate through the rate retured and calculate the
-            # This will be used in the future when the consumption device is available
+            # Max, min and average
             ########################################################################
 
             if not api_error:
@@ -220,8 +229,12 @@ class Plugin(indigo.PluginBase):
                 	if rates["value_inc_vat"] <= min_rate:
                 		min_rate = rates["value_inc_vat"]
             	average_rate = sum_rates / results_json['count']
-
+            	
+            ########################################################################
             # Store the JSON response to the device so that the API doesn't need to be called every 30 mins
+            ########################################################################
+
+
             if not api_error:
             	updatedProps=device.pluginProps
             	updatedProps['today_rates'] = json.dumps(half_hourly_rates)
@@ -235,7 +248,7 @@ class Plugin(indigo.PluginBase):
             # This should only happen once a day, not at 17:00Z so first do the copy to preserve yesterdays Rates and max and mine only if the day has changed
             # As I also use this to test if the API call failed, so also test to make sure an update doesn't happen when the reason is the API failed
 
-            if update_daily_rate and device.states["API_Today"] != "API Refresh Failed" and not update_afternoon_refresh and update_rate:
+            if (update_daily_rate and device.states["API_Today"] != "API Refresh Failed") and not update_afternoon_refresh :
                 new_props = device.pluginProps
                 new_props['yesterday_rates'] = new_props['today_rates']
                 device.replacePluginPropsOnServer(new_props)
@@ -275,7 +288,12 @@ class Plugin(indigo.PluginBase):
             device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
             device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
             device.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOn)
-
+            
+            ########################################################################
+        	# This ends the indented section that only runs
+        	# if it is 00:00 or 17:00Z
+        	########################################################################
+        
         ########################################################################
         # Now parse the stored json in the device to check for the applicable rate
         # in this 30 minute period if an update is needed
