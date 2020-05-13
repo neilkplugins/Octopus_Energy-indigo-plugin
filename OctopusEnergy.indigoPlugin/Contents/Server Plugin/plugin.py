@@ -283,6 +283,7 @@ class Plugin(indigo.PluginBase):
                 # Catch all other possible failures
                 except:
                     self.errorLog("Octopus API Refresh, Error in getting yesterday tariffs")
+                
 
                 ########################################################################
                 # Iterate through the rate retured and calculate the
@@ -309,6 +310,10 @@ class Plugin(indigo.PluginBase):
 
                 if not api_error_yest:
                     updatedProps['yesterday_rates'] = json.dumps(yesterday_half_hourly_rates)
+                    
+                
+                if not api_error and not api_error_yest:
+                    device.replacePluginPropsOnServer(updatedProps)
 
                 device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str(device.states['Daily_Standing_Charge'])+"p" })
                 device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : average_rate_yest , 'decimalPlaces' : 4 })
@@ -404,9 +409,7 @@ class Plugin(indigo.PluginBase):
             
             # Update the plugin props with the stored json for today and yeserdays rates
 
-            if (update_daily_rate or update_afternoon_refresh):
-                if not api_error and not api_error_yest:
-                    device.replacePluginPropsOnServer(updatedProps)
+            
         else:
             self.debugLog("No Updates required for device through update_rate  for "+device.name)
 		########################################################################
@@ -488,7 +491,7 @@ class Plugin(indigo.PluginBase):
             errorsDict['Device_Postcode'] = "API Error validating with Octopus"
             return (False, valuesDict, errorsDict)
         else:
-            self.debugLog("API sucessfully Connected to Octopus Servers")
+            self.debugLog("API successfully Connected to Octopus Servers")
         if response.status_code ==200:
             gsp_json =  response.json()
             if gsp_json['count']==0:
