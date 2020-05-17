@@ -236,12 +236,12 @@ class Plugin(indigo.PluginBase):
                             min_rate = rates["value_inc_vat"]
                     average_rate = sum_rates / results_json['count']
 
-                # Update the states to be applied to the server for the todays rates
+                # Update the states to be applied to the server for the todays rates if the API call succeeded
 
-                device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
+                    device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
 
                 ########################################################################
                 # Store the JSON response to the device so that the API doesn't need to be called every 30 mins
@@ -311,14 +311,12 @@ class Plugin(indigo.PluginBase):
                 if not api_error_yest:
                     updatedProps['yesterday_rates'] = json.dumps(yesterday_half_hourly_rates)
                     
-                
                 if not api_error and not api_error_yest:
                     device.replacePluginPropsOnServer(updatedProps)
-
-                device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str(device.states['Daily_Standing_Charge'])+"p" })
-                device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : average_rate_yest , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : max_rate_yest , 'decimalPlaces' : 4 })
-                device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : min_rate_yest , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'Yesterday_Standing_Charge', 'value' : device.states['Daily_Standing_Charge'] , 'uiValue' :str(device.states['Daily_Standing_Charge'])+"p" })
+                    device_states.append({ 'key': 'Yesterday_Average_Rate', 'value' : average_rate_yest , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'Yesterday_Max_Rate', 'value' : max_rate_yest , 'decimalPlaces' : 4 })
+                    device_states.append({ 'key': 'Yesterday_Min_Rate', 'value' : min_rate_yest , 'decimalPlaces' : 4 })
                 if not update_afternoon_refresh:
                     device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : False })
                     self.debugLog("Resetting Afternoon Refresh to False")
@@ -339,13 +337,15 @@ class Plugin(indigo.PluginBase):
                 if response.status_code ==200:
                     standing_charge_json = response.json()
                     standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
+                    device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
                     self.debugLog("Standing Charge "+str(standing_charge_inc_vat))
                 else:
                     self.errorLog("Octopus API - Standing Charge Error getting Standing Charges")
 
                 # Append the updates to the updated states dict and change the state image
 
-                device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
+				#Moved into the if response
+                #device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
                 device.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOn)
 
                 # If this is the first update the yesterday standing charge will be set to zero, this applies todays rate to yesterday
@@ -542,6 +542,14 @@ class Plugin(indigo.PluginBase):
     		indigo.server.log("Period , Tariff")
     		for rates in json.loads(indigo.devices[deviceId].pluginProps['yesterday_rates']):
     			indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+    			
+    # Force API refresh on all devices at next cycle
+    
+    def forceAPIrefresh(self):
+    		for deviceId in self.deviceList:
+    			indigo.server.log(indigo.devices[deviceId].name+" Set for refresh on next cycle")
+    			indigo.devices[deviceId].updateStateOnServer(key='API_Today', value='API Refresh Requested')
+    			indigo.devices[deviceId].updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
 
     ########################################
     # Action Methods
@@ -584,6 +592,8 @@ class Plugin(indigo.PluginBase):
     			writer.writerow([rates['valid_from'],rates['value_inc_vat']])
     	indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
     	return()
+    	
+
 
 	#Was getting strange behaviour as when I wrote the json to the plugin props the device would restart causing a failed update
 	#Found this was intended unless this method was defined.  Now will only restart if the address (postcode) changes.
