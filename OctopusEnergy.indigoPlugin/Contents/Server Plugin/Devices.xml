@@ -11,9 +11,14 @@
         <Label>Do you want to log daily price history in a daily CSV file?</Label>
         <Description>Saves in logging folder</Description>
         </Field>
+        <Field type="checkbox" id="use_API" defaultValue="false">
+        <Label>Do you have an Octopus API Key to get historical consumption data </Label>
+        <Description>Find it in your Octopus Energy Account</Description>
+
+        </Field>
 			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
 				<Label>populate ui address field</Label>
-				<Description>duplicate of IP address to show in indigo UI</Description>
+				<Description>duplicate of postcode to show in indigo UI</Description>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -77,7 +82,528 @@
                 <TriggerLabel>Has the afternoon refresh completed?</TriggerLabel>
                 <ControlPageLabel>Has the API Refreshed in the afternoon</ControlPageLabel>
             </State>
+<State id="From-00-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-00-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-01-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-01-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-02-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-02-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-03-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-03-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-04-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-04-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-05-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-05-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-06-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-06-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-07-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-07-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-08-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-08-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-09-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-09-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-10-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-10-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-11-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-11-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-12-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-12-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-13-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-13-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-14-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-14-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-15-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-15-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-16-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-16-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-17-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-17-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-18-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-18-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-19-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-19-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-20-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-20-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-21-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-21-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-22-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-22-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-23-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+		<State id="From-23-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff</TriggerLabel>
+			<ControlPageLabel>Tariff</ControlPageLabel>
+            </State>
+
         </States>
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
+	</Device>
+	<Device type="custom" id="OctopusEnergy_consumption">
+		<Name>Octopus Energy Historical Consumption</Name>
+	<ConfigUI>
+			<Field id="API_key" type="textfield">
+			<Label>Octopus Energy Account API Key:</Label>
+			        <Description>Find it in your Octopus Energy Account</Description>
+
+			</Field>
+		<Field id="meter_type" type="menu" defaultValue="electricity">
+                <Label>Meter Type</Label>
+                <List>
+						<Option value="electricity">Electricity Consumption</Option>
+						<Option value="gas">Gas Consumption</Option>
+				</List>
+            </Field>
+		<Field id="meter_point" type="textfield">
+			<Label>Electricty meter MPAN/ Gas meter MPRN:</Label>
+			</Field>
+		<Field id="meter_serial" type="textfield">
+			<Label>Meter Serial Number:</Label>
+			</Field>
+			<Field type="checkbox" id="Log_Rates" defaultValue="false">
+        <Label>Do you want to log consumption data in a CSV file?</Label>
+        <Description>Saves in logging folder</Description>
+        </Field>
+
+			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
+				<Label>populate ui address field</Label>
+				<Description>duplicate of postcode to show in indigo UI</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+		<State id="From-00-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Energy Consumption</TriggerLabel>
+			<ControlPageLabel>Energy Consumption</ControlPageLabel>
+            </State>
+		<State id="From-00-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-01-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-01-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-02-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-02-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-03-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-03-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-04-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-04-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-05-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-05-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-06-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-06-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-07-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-07-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-08-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-08-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-09-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-09-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-10-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-10-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-11-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-11-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-12-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-12-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-13-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-13-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-14-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-14-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-15-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-15-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-16-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-16-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-17-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-17-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-18-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-18-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-19-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-19-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-20-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-20-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-21-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-21-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-22-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-22-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-23-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+		<State id="From-23-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+			<State id="total_daily_consumption">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Yesterday Consumption</TriggerLabel>
+			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+            </State>
+	</States>
+		<UiDisplayStateId>total_daily_consumption</UiDisplayStateId>
 	</Device>
 </Devices>
