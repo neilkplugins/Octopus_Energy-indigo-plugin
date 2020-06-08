@@ -327,7 +327,7 @@
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
 	</Device>
 	<Device type="custom" id="OctopusEnergy_consumption">
-		<Name>Octopus Energy Historical Consumption</Name>
+		<Name>Octopus Energy Historical Consumption/Cost</Name>
 	<ConfigUI>
 			<Field id="API_key" type="textfield">
 			<Label>Octopus Energy Account API Key:</Label>
@@ -340,6 +340,14 @@
 						<Option value="electricity">Electricity Consumption</Option>
 						<Option value="gas">Gas Consumption</Option>
 				</List>
+            </Field>
+<Field type="checkbox" id="calc_costs_yest" defaultValue="false">
+	<Label>Calculate Electricity Cost:</Label>
+	<Description> applying consumption to yesterdays rates</Description>
+</Field>
+			<Field id="tariff_device" type="menu" visibleBindingId="calc_costs_yest" visibleBindingValue="true">
+                <Label>Tariff Device:</Label>
+                <List class="self" filter="" method="getTariffDevice" dynamicReload="true"/>
             </Field>
 		<Field id="meter_point" type="textfield">
 			<Label>Electricty meter MPAN/ Gas meter MPRN:</Label>

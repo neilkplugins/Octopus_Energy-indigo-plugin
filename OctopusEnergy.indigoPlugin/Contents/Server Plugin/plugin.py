@@ -115,13 +115,24 @@ class Plugin(indigo.PluginBase):
                 sum_consump = 0
                 consump_state = 0
                 device_states = []
-
-
+                if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
+                    tariff_device=indigo.devices[int(device.pluginProps["tariff_device"])]
+                    yesterday_rates = json.loads(tariff_device.pluginProps['yesterday_rates'])
                 for consumption in reversed(half_hourly_consumption):
-                    device_states.append({'key': state_list[consump_state], 'value': round(consumption["consumption"], 4)})
-                    sum_consump= sum_consump + consumption["consumption"]
+                    if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type']=='electricity':
+                        self.debugLog( consumption["consumption"])
+                        self.debugLog(yesterday_rates[(47-consump_state)]['value_inc_vat'])
+                        half_hour_cost = consumption["consumption"] * yesterday_rates[(47-consump_state)]['value_inc_vat']
+                        device_states.append({'key': state_list[consump_state], 'value': round(half_hour_cost, 4)})
+                        sum_consump = sum_consump + half_hour_cost
+                    else:
+                        device_states.append({'key': state_list[consump_state], 'value': round(consumption["consumption"], 4)})
+                        sum_consump= sum_consump + consumption["consumption"]
                     consump_state += 1
-                device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(sum_consump)+" kWh"})
+                if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(round(sum_consump,2))+" p"})
+                else:
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(sum_consump)+" kWh"})
                 device.updateStatesOnServer(device_states)
 
             return
@@ -662,3 +673,16 @@ class Plugin(indigo.PluginBase):
             if origDev.pluginProps['address'] != newDev.pluginProps['address']:
                 return True
             return False
+
+    def getTariffDevice(self, filter="", valuesDict=None, typeId="", targetId=0):
+
+        retList = []
+        devicePlugin = valuesDict.get("devicePlugin", None)
+        for dev in indigo.devices.iter():
+            if dev.protocol == indigo.kProtocol.Plugin and \
+                    dev.pluginId == "com.barn.indigoplugin.OctopusEnergy" and \
+                    dev.deviceTypeId != 'OctopusEnergy_consumption':
+                retList.append((dev.id, dev.name))
+
+        retList.sort(key=lambda tup: tup[1])
+        return retList
