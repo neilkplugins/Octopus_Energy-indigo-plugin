@@ -50,6 +50,15 @@ class Plugin(indigo.PluginBase):
         self.debugLog("Starting device: " + device.name)
         self.debugLog(str(device.id)+ " " + device.name)
         device.stateListOrDisplayStateIdChanged()
+        if device.deviceTypeId == "OctopusEnergy_consumption":
+            newProps = device.pluginProps
+            if device.pluginProps['meter_type']=='electricity' and device.pluginProps['calc_costs_yest']:
+                newProps['address']="Electricity Cost"
+            elif device.pluginProps['meter_type']=='electricity' and not (device.pluginProps['calc_costs_yest']):
+                newProps['address'] = "Electricity Consumption"
+            else:
+                newProps['address']= "Gas Consumption"
+            device.replacePluginPropsOnServer(newProps)
         if device.id not in self.deviceList:
             self.update(device)
             self.deviceList.append(device.id)
@@ -138,8 +147,11 @@ class Plugin(indigo.PluginBase):
                     consump_state += 1
                 if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(round(sum_consump,2))+" p"})
+                    device_states.append({'key': 'address', 'value': "electricity cost"})
                 else:
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(sum_consump)+" kWh"})
+                    device_states.append({'key': 'address', 'value': (device.pluginProps['meter_type']+" Consumption") })
+
                 device_states.append({'key': 'API_Today', 'value': str(local_day)})
                 device.updateStatesOnServer(device_states)
 
