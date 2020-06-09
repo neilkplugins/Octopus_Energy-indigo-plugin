@@ -86,6 +86,13 @@ class Plugin(indigo.PluginBase):
     ########################################
     def update(self,device):
         if device.deviceTypeId =="OctopusEnergy_consumption":
+            local_day = datetime.datetime.now().date()
+
+            if str(local_day) != device.states["API_Today"]:
+                self.debugLog("Need to update consumption - not same day as last update "+device.name)
+            else:
+                self.debugLog("No Need to update consumption - same day as last update "+device.name)
+                return
             local_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=1)
             if device.pluginProps['meter_type']=='electricity':
                 url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
@@ -133,6 +140,7 @@ class Plugin(indigo.PluginBase):
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(round(sum_consump,2))+" p"})
                 else:
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(sum_consump)+" kWh"})
+                device_states.append({'key': 'API_Today', 'value': str(local_day)})
                 device.updateStatesOnServer(device_states)
 
             return
@@ -605,14 +613,15 @@ class Plugin(indigo.PluginBase):
 
     def logDumpRates(self):
         for deviceId in self.deviceList:
-            indigo.server.log(indigo.devices[deviceId].name+" Today")
-            indigo.server.log("Period , Tariff")
-            for rates in json.loads(indigo.devices[deviceId].pluginProps['today_rates']):
-                indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
-            indigo.server.log("Yesterday")
-            indigo.server.log("Period , Tariff")
-            for rates in json.loads(indigo.devices[deviceId].pluginProps['yesterday_rates']):
-                indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+            if indigo.devices[deviceId].deviceTypeId !="OctopusEnergy_consumption":
+                indigo.server.log(indigo.devices[deviceId].name+" Today")
+                indigo.server.log("Period , Tariff")
+                for rates in json.loads(indigo.devices[deviceId].pluginProps['today_rates']):
+                    indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
+                indigo.server.log("Yesterday")
+                indigo.server.log("Period , Tariff")
+                for rates in json.loads(indigo.devices[deviceId].pluginProps['yesterday_rates']):
+                    indigo.server.log(rates['valid_from']+" , "+str(rates['value_inc_vat']))
 
     # Force API refresh on all devices at next cycle
 
@@ -620,7 +629,8 @@ class Plugin(indigo.PluginBase):
             for deviceId in self.deviceList:
                 indigo.server.log(indigo.devices[deviceId].name+" Set for refresh on next cycle")
                 indigo.devices[deviceId].updateStateOnServer(key='API_Today', value='API Refresh Requested')
-                indigo.devices[deviceId].updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
+                if indigo.devices[deviceId].deviceTypeId != "OctopusEnergy_consumption":
+                    indigo.devices[deviceId].updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
 
     ########################################
     # Action Methods
