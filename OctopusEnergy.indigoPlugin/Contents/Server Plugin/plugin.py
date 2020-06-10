@@ -139,18 +139,16 @@ class Plugin(indigo.PluginBase):
                         self.debugLog( consumption["consumption"])
                         self.debugLog(yesterday_rates[(47-consump_state)]['value_inc_vat'])
                         half_hour_cost = consumption["consumption"] * yesterday_rates[(47-consump_state)]['value_inc_vat']
-                        device_states.append({'key': state_list[consump_state], 'value': round(half_hour_cost, 4)})
+                        device_states.append({'key': state_list[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
                         sum_consump = sum_consump + half_hour_cost
                     else:
-                        device_states.append({'key': state_list[consump_state], 'value': round(consumption["consumption"], 4)})
+                        device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
                         sum_consump= sum_consump + consumption["consumption"]
                     consump_state += 1
                 if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
-                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(round(sum_consump,2))+" p"})
-                    device_states.append({'key': 'address', 'value': "electricity cost"})
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 2, 'uiValue' : str(round(sum_consump,2))+" p"})
                 else:
-                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump, 'uiValue' : str(sum_consump)+" kWh"})
-                    device_states.append({'key': 'address', 'value': (device.pluginProps['meter_type']+" Consumption") })
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 4 ,'uiValue' : str(sum_consump)+" kWh"})
 
                 device_states.append({'key': 'API_Today', 'value': str(local_day)})
                 device.updateStatesOnServer(device_states)
