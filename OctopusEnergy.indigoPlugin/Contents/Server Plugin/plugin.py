@@ -85,7 +85,6 @@ class Plugin(indigo.PluginBase):
                 # this is currently configurable (it may be lower as a default the check can be quick without hitting the API so that the rate change happens close to minute 00 and minute 30)
                 # At present the polling frequency will determine the max number of seconds in a given period the tariff could be out of date
                 self.sleep(1 * pollingFreq )
-                self.debugLog(self.deviceList)
                 for deviceId in self.deviceList:
                     # call the update method with the device instance
                     self.update(indigo.devices[deviceId])
@@ -96,6 +95,7 @@ class Plugin(indigo.PluginBase):
     def update(self,device):
         if device.deviceTypeId =="OctopusEnergy_consumption":
             local_day = datetime.datetime.now().date()
+            local_yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
 
             if str(local_day) != device.states["API_Today"]:
                 self.debugLog("Need to update consumption - not same day as last update "+device.name)
@@ -126,32 +126,70 @@ class Plugin(indigo.PluginBase):
                 self.errorLog("Octopus API refresh failure (consumption), Other error " + str(err))
                 api_error = True
             response_json=response.json()
+
+            if not api_error and response_json['count']!=48:
+                api_error= True
+                self.errorLog('API Error - Meter Data not available, results limited to '+str(response_json['count']))
+
+            device_states = []
+            results_csv=[]
+
             if not api_error:
                 half_hourly_consumption = response_json['results']
                 sum_consump = 0
                 consump_state = 0
-                device_states = []
+
                 if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
                     tariff_device=indigo.devices[int(device.pluginProps["tariff_device"])]
                     yesterday_rates = json.loads(tariff_device.pluginProps['yesterday_rates'])
+
+
                 for consumption in reversed(half_hourly_consumption):
                     if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type']=='electricity':
-                        self.debugLog( consumption["consumption"])
-                        self.debugLog(yesterday_rates[(47-consump_state)]['value_inc_vat'])
+
                         half_hour_cost = consumption["consumption"] * yesterday_rates[(47-consump_state)]['value_inc_vat']
                         device_states.append({'key': state_list[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
                         sum_consump = sum_consump + half_hour_cost
+                        self.debugLog(consumption['interval_start']+" "+str(half_hour_cost))
+                        results_csv.append({consumption['interval_start'], half_hour_cost})
                     else:
                         device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
                         sum_consump= sum_consump + consumption["consumption"]
+                        results_csv.append({consumption['interval_start'], consumption['consumption']})
+
                     consump_state += 1
+
                 if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 2, 'uiValue' : str(round(sum_consump,2))+" p"})
                 else:
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 4 ,'uiValue' : str(sum_consump)+" kWh"})
 
+                if device.pluginProps['Log_Rates']:
+                    if self.pluginPrefs['LogFilePath'] == "":
+                        self.errorLog("No directory path specified in the Plugin Configuration to save the CSV File")
+                        DefaultCSVPath = "{}/Preferences/Plugins/{}".format(indigo.server.getInstallFolderPath(), self.pluginId)
+                        self.errorLog("Defaulting to "+DefaultCSVPath)
+
+                        self.pluginPrefs['LogFilePath']= DefaultCSVPath
+                        if not os.path.isdir(self.pluginPrefs['LogFilePath']):
+                            os.mkdir(self.pluginPrefs['LogFilePath'])
+                    filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-Rates.csv"
+                    with open(filepath, 'w') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(["Period", "Tariff"])
+                        for results in results_csv:
+                            writer.writerow(result)
+
+
+
+
                 device_states.append({'key': 'API_Today', 'value': str(local_day)})
-                device.updateStatesOnServer(device_states)
+            if api_error:
+                device_states.append({'key': 'API_Today', 'value': "Meter Data Not Available"})
+            device.updateStatesOnServer(device_states)
+            if api_error:
+                device.setErrorStateOnServer('Meter Data Not Available')
+
 
             return
         # Renamed UTC_Today to API_Today in devices.xml as it is now always the current day and will show the date the API data was refreshed, this will ensure existing devices are refreshed
@@ -256,7 +294,6 @@ class Plugin(indigo.PluginBase):
                 indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
 
                 PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
-                self.debugLog(PERIOD)
                 GET_LOCAL_TARIFFS = BASE_URL+"/products/"+PRODUCT_CODE+"/electricity-tariffs/"+TARIFF_CODE+"/standard-unit-rates/?"+PERIOD
                 try:
                     response = requests.get(GET_LOCAL_TARIFFS, timeout=float(self.pluginPrefs['requeststimeout']))
@@ -302,14 +339,11 @@ class Plugin(indigo.PluginBase):
                     stored_rates=indigo.Dict()
                     # This is the current rate cap for Agile Octopus, min value should always be lower than this, from the plugin config
                     min_rate = str(self.pluginPrefs['Capped_Rate'])
-                    self.debugLog(half_hourly_rates)
 
                     for rates in reversed(half_hourly_rates):
                         sum_rates = sum_rates + rates["value_inc_vat"]
                         device_states.append({'key': state_list[rate_state], 'value': round(rates["value_inc_vat"],4)})
-                        self.debugLog(rate_state)
-                        self.debugLog(rates["value_inc_vat"])
-                        self.debugLog(state_list[rate_state])
+
                         rate_state += 1
                         if rates["value_inc_vat"] >= max_rate:
                             max_rate = rates["value_inc_vat"]
@@ -445,8 +479,6 @@ class Plugin(indigo.PluginBase):
                 # This ends the indented section that only runs
                 # if it is 00:00 or 17:00Z
                 ########################################################################
-            else:
-                self.debugLog("No Updates required for device through daily_update or afternoon refresh for "+device.name)
 
                 ########################################################################
                 # Write the CSV file out at 18:00 UTC and if the checkbox is ticked in the device config
@@ -594,12 +626,10 @@ class Plugin(indigo.PluginBase):
                     valuesDict['device_gsp'] = gsp
             else:
                 gsp = "Unknown API Error"
-                self.debugLog(response)
                 errorsDict = indigo.Dict()
                 errorsDict['Device_Postcode'] = "Unknown Octopus API Error"
                 return (False, valuesDict, errorsDict)
             valuesDict['address'] = valuesDict['Device_Postcode']
-            self.debugLog(valuesDict)
 
         return (True, valuesDict)
 
@@ -660,7 +690,7 @@ class Plugin(indigo.PluginBase):
         with open(filepath, 'w') as file:
             writer = csv.writer(file)
             writer.writerow(["Period", "Tariff"])
-            for rates in json.loads(device.pluginProps['today_rates']):
+            for rates in reversed(json.loads(device.pluginProps['today_rates'])):
                 writer.writerow([rates['valid_from'],rates['value_inc_vat']])
         indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
         return()
@@ -679,7 +709,7 @@ class Plugin(indigo.PluginBase):
         with open(filepath, 'w') as file:
             writer = csv.writer(file)
             writer.writerow(["Period", "Tariff"])
-            for rates in json.loads(device.pluginProps['yesterday_rates']):
+            for rates in reversed(json.loads(device.pluginProps['yesterday_rates'])):
                 writer.writerow([rates['valid_from'],rates['value_inc_vat']])
         indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
         return()
