@@ -608,8 +608,8 @@
             </State>
 			<State id="total_daily_consumption">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Yesterday Consumption</TriggerLabel>
-			<ControlPageLabel>Yesterday Consumption</ControlPageLabel>
+			<TriggerLabel>Sum of Daily Consumption</TriggerLabel>
+			<ControlPageLabel>Sum of Daily Consumption</ControlPageLabel>
             </State>
 			<State id="API_Today">
                 <ValueType>String</ValueType>

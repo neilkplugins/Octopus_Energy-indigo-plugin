@@ -93,15 +93,33 @@ class Plugin(indigo.PluginBase):
 
     ########################################
     def update(self,device):
+
+        ########################################################################
+        # Complete the update process for consumption devices
+        ########################################################################
+
         if device.deviceTypeId =="OctopusEnergy_consumption":
             local_day = datetime.datetime.now().date()
             local_yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
+
+            ########################################################################
+            # Check if the API Calls have been made today, if not then re-run
+            # The previous day results are not available at a known time after midnight
+            # and it varies wildly.  My need to add a mechanism to set them out of range if no update is available
+            ########################################################################
+
 
             if str(local_day) != device.states["API_Today"]:
                 self.debugLog("Need to update consumption - not same day as last update "+device.name)
             else:
                 self.debugLog("No Need to update consumption - same day as last update "+device.name)
                 return
+
+            ########################################################################
+            # Calculate the date to retrieve the usage data (only the previous day is available)
+            # The call either the Gas or Electricity Supply urls
+            ########################################################################
+
             local_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=1)
             if device.pluginProps['meter_type']=='electricity':
                 url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
@@ -127,9 +145,18 @@ class Plugin(indigo.PluginBase):
                 api_error = True
             response_json=response.json()
 
-            if not api_error and response_json['count']!=48:
+            ########################################################################
+            # If we have had a valid response, we need to check that the days values have been returned
+            # It reports in 30 min periods, so we should have 48 (47 when indexed from 0) results if the data is available
+            ########################################################################
+
+            if not api_error and response_json['count']!=47:
                 api_error= True
                 self.errorLog('API Error - Meter Data not available, results limited to '+str(response_json['count']))
+
+            ########################################################################
+            # Apply the results to the states, and if selected in the props write out a CSV file
+            ########################################################################
 
             device_states = []
             results_csv=[]
@@ -151,11 +178,11 @@ class Plugin(indigo.PluginBase):
                         device_states.append({'key': state_list[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
                         sum_consump = sum_consump + half_hour_cost
                         self.debugLog(consumption['interval_start']+" "+str(half_hour_cost))
-                        results_csv.append({consumption['interval_start'], half_hour_cost})
+                        results_csv.append([consumption['interval_start'], half_hour_cost])
                     else:
                         device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
                         sum_consump= sum_consump + consumption["consumption"]
-                        results_csv.append({consumption['interval_start'], consumption['consumption']})
+                        results_csv.append([consumption['interval_start'], consumption['consumption']])
 
                     consump_state += 1
 
@@ -173,12 +200,12 @@ class Plugin(indigo.PluginBase):
                         self.pluginPrefs['LogFilePath']= DefaultCSVPath
                         if not os.path.isdir(self.pluginPrefs['LogFilePath']):
                             os.mkdir(self.pluginPrefs['LogFilePath'])
-                    filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-Rates.csv"
+                    filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-History.csv"
                     with open(filepath, 'w') as file:
                         writer = csv.writer(file)
                         writer.writerow(["Period", "Tariff"])
                         for results in results_csv:
-                            writer.writerow(result)
+                            writer.writerow(results)
 
 
 
@@ -189,11 +216,16 @@ class Plugin(indigo.PluginBase):
             device.updateStatesOnServer(device_states)
             if api_error:
                 device.setErrorStateOnServer('Meter Data Not Available')
-
+            ########################################################################
+            # Consumption device updates complete
+            ########################################################################
 
             return
-        # Renamed UTC_Today to API_Today in devices.xml as it is now always the current day and will show the date the API data was refreshed, this will ensure existing devices are refreshed
-        # and the additional yesterdays states and any future updates will be applied
+
+        ########################################################################
+        # Now if it is not a consumption device, it is a rate device so update that
+        ########################################################################
+
 
         device.stateListOrDisplayStateIdChanged()
 
@@ -342,7 +374,7 @@ class Plugin(indigo.PluginBase):
 
                     for rates in reversed(half_hourly_rates):
                         sum_rates = sum_rates + rates["value_inc_vat"]
-                        device_states.append({'key': state_list[rate_state], 'value': round(rates["value_inc_vat"],4)})
+                        device_states.append({'key': state_list[rate_state], 'value': rates["value_inc_vat"], 'decimalPlaces' : 4 })
 
                         rate_state += 1
                         if rates["value_inc_vat"] >= max_rate:
@@ -453,7 +485,7 @@ class Plugin(indigo.PluginBase):
                 except requests.exceptions.HTTPError as err:
                     self.errorLog("Octopus API - Standing Charge Http Error "+ str(err))
                 except Exception as err:
-                    self.errorLog("Octopus API - Standing Charge Other error"+err)
+                    self.errorLog("Octopus API - Standing Charge Other error"+str(err))
                 if response.status_code ==200:
                     standing_charge_json = response.json()
                     standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
@@ -517,7 +549,7 @@ class Plugin(indigo.PluginBase):
             # Append the half hourly updates to the update dictionary but not if an API refresh failed (which will force future attempts to refresh)
             ########################################################################
 
-            device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
+            device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'decimalPlaces'  :4, 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
             device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
 
             ########################################################################
