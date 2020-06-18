@@ -723,38 +723,20 @@ class Plugin(indigo.PluginBase):
         if not os.path.isdir(self.pluginPrefs['LogFilePath']):
             os.mkdir(self.pluginPrefs['LogFilePath'])
         filepath = self.pluginPrefs['LogFilePath']+"/"+str(local_day)+"-"+device.name+"-Action-Today-Rates.csv"
+        if device.pluginProps['CSV_engine']:
+            filepath=device.pluginProps['CSV_FilePath']+"agile_today.csv"
         with open(filepath, 'w') as file:
             writer = csv.writer(file)
             writer.writerow(["Period", "Tariff"])
-            xvals=[]
-            yvals=[]
+
             for rates in reversed(json.loads(device.pluginProps['today_rates'])):
                 self.debugLog(rates['valid_from'])
                 newdate = dateutil.parser.parse(rates['valid_from'])
                 writer.writerow([newdate.strftime("%Y-%m-%d %H:%M:%S.%f"),rates['value_inc_vat']])
-                xvals.append(rates['value_inc_vat'])
-                yvals.append(newdate.strftime("%Y-%m-%d %H:%M:%S.%f"))
+
 
         indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
-        self.debugLog(xvals)
-        self.debugLog(yvals)
-        matplotlibPlugin = indigo.server.getPlugin("com.fogbert.indigoplugin.matplotlib")
-        payload = {'x_values': yvals,
-                   'y_values': xvals,
-                   'kwargs': {'linestyle': 'dashed',
-                              'color': 'b',
-                              'marker': 'd',
-                              'markerfacecolor': 'r'},
-                   'path': '/Library/Application Support/Perceptive Automation/Indigo 7.4/IndigoWebServer/images/controls/static/',
-                   'filename': 'chart_filename1.png'
-                   }
-        try:
-            result = matplotlibPlugin.executeAction('refreshTheChartsAPI', deviceId=0, waitUntilDone=True,
-                                                    props=payload)
-            if result is not None:
-                indigo.server.log(result['message'])
-        except Exception as err:
-            indigo.server.log(u"Exception occurred: {0}".format(err))
+
 
         return()
 

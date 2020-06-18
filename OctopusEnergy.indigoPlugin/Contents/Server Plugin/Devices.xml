@@ -11,15 +11,13 @@
         <Label>Do you want to log daily price history in a daily CSV file?</Label>
         <Description>Saves in logging folder</Description>
         </Field>
-        <Field type="checkbox" id="use_API" defaultValue="false">
-        <Label>Do you have an Octopus API Key to get historical consumption data </Label>
-        <Description>Find it in your Octopus Energy Account</Description>
-
+		<Field type="checkbox" id="CSV_engine" defaultValue="false" visibleBindingId="Log_Rates" visibleBindingValue="true">
+        <Label>Publish to MatPlotLib Plugin CSV folder as agile_today.csv ?</Label>
+        <Description>Requires MatplotLib Plugin</Description>
         </Field>
-			<Field type="textfield" id="address" defaultValue="- none -" hidden="true">
-				<Label>populate ui address field</Label>
-				<Description>duplicate of postcode to show in indigo UI</Description>
-			</Field>
+		<Field type="textfield" id="CSV_FilePath" visibleBindingId="Log_Rates" visibleBindingValue="true">
+    <Label>Enter the file path you use for MatplotLib CSV Data Files (Save Data files to from plugin config)</Label>
+    </Field>
 		</ConfigUI>
 		<States>
 		<State id="Current_Electricity_Rate">
