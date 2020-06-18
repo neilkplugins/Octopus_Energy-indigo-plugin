@@ -16,6 +16,7 @@ import datetime
 import csv
 import os
 import base64
+import dateutil.parser
 
 ################################################################################
 # Globals
@@ -55,9 +56,9 @@ class Plugin(indigo.PluginBase):
             if device.pluginProps['meter_type']=='electricity' and device.pluginProps['calc_costs_yest']:
                 newProps['address']="Electricity Cost"
             elif device.pluginProps['meter_type']=='electricity' and not (device.pluginProps['calc_costs_yest']):
-                newProps['address'] = "Electricity Consumption"
+                newProps['address'] = "Electricity Usage"
             else:
-                newProps['address']= "Gas Consumption"
+                newProps['address']= "Gas Usage"
             device.replacePluginPropsOnServer(newProps)
         if device.id not in self.deviceList:
             self.update(device)
@@ -125,7 +126,7 @@ class Plugin(indigo.PluginBase):
                 url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
                 self.debugLog("Eleccy "+ url)
             else:
-                url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
+                url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
                 self.debugLog("Gas "+url)
             encoded_api_key = base64.b64encode(device.pluginProps['API_key']+":")
             payload = {}
@@ -147,10 +148,10 @@ class Plugin(indigo.PluginBase):
 
             ########################################################################
             # If we have had a valid response, we need to check that the days values have been returned
-            # It reports in 30 min periods, so we should have 48 (47 when indexed from 0) results if the data is available
+            # It reports in 30 min periods, so we should have 48  results if the data is available
             ########################################################################
 
-            if not api_error and response_json['count']!=47:
+            if not api_error and response_json['count']!=48:
                 api_error= True
                 self.errorLog('API Error - Meter Data not available, results limited to '+str(response_json['count']))
 
@@ -188,8 +189,11 @@ class Plugin(indigo.PluginBase):
 
                 if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type'] == 'electricity':
                     device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 2, 'uiValue' : str(round(sum_consump,2))+" p"})
-                else:
-                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 4 ,'uiValue' : str(sum_consump)+" kWh"})
+                elif device.pluginProps['meter_type'] == 'electricity':
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 2 ,'uiValue' : str(round(sum_consump,2))+" kWh"})
+                elif device.pluginProps['meter_type'] == 'gas':
+                    device_states.append({'key': 'total_daily_consumption', 'value': sum_consump,'decimalPlaces' : 2 ,'uiValue' : str(round(sum_consump,2))+" M3"})
+
 
                 if device.pluginProps['Log_Rates']:
                     if self.pluginPrefs['LogFilePath'] == "":
@@ -722,9 +726,36 @@ class Plugin(indigo.PluginBase):
         with open(filepath, 'w') as file:
             writer = csv.writer(file)
             writer.writerow(["Period", "Tariff"])
+            xvals=[]
+            yvals=[]
             for rates in reversed(json.loads(device.pluginProps['today_rates'])):
-                writer.writerow([rates['valid_from'],rates['value_inc_vat']])
+                self.debugLog(rates['valid_from'])
+                newdate = dateutil.parser.parse(rates['valid_from'])
+                writer.writerow([newdate.strftime("%Y-%m-%d %H:%M:%S.%f"),rates['value_inc_vat']])
+                xvals.append(rates['value_inc_vat'])
+                yvals.append(newdate.strftime("%Y-%m-%d %H:%M:%S.%f"))
+
         indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
+        self.debugLog(xvals)
+        self.debugLog(yvals)
+        matplotlibPlugin = indigo.server.getPlugin("com.fogbert.indigoplugin.matplotlib")
+        payload = {'x_values': yvals,
+                   'y_values': xvals,
+                   'kwargs': {'linestyle': 'dashed',
+                              'color': 'b',
+                              'marker': 'd',
+                              'markerfacecolor': 'r'},
+                   'path': '/Library/Application Support/Perceptive Automation/Indigo 7.4/IndigoWebServer/images/controls/static/',
+                   'filename': 'chart_filename1.png'
+                   }
+        try:
+            result = matplotlibPlugin.executeAction('refreshTheChartsAPI', deviceId=0, waitUntilDone=True,
+                                                    props=payload)
+            if result is not None:
+                indigo.server.log(result['message'])
+        except Exception as err:
+            indigo.server.log(u"Exception occurred: {0}".format(err))
+
         return()
 
     # Write Yesterdays rates to file
