@@ -10,13 +10,13 @@ The really interesting thing is that this can also result in negative pricing, t
 The plugin does not require you to make a switch to Octopus, to use it you can simply enter your postcode as the prices vary by region in the UK.  The plugin can create a device that will show the current kWh price for you location (or indeed mutliple locations) , the daily standing charge, the maximum, minimum and average rates.  All these device states can be graphed if you use one of the graphing plugins, you can trigger based on those values or thresholds.  If you can measure your whole house demand (even manually using your smart meter in House display) you can project your savings.
 
 
-I am in the process of switching to Octopus Agile and when complete I will then incorporate the consumption data capabilities of the API.  My goal with this will be to track actual historical cost for each 30 minute period, this will only be possible for the previous 24 Hours as Octopus do not publish consumption data real time.  The plugin will optionally generate a daily CSV containing the rates for the current day, and a seperate action for yesterdays rates.  The latest version optimises the API access such that only 2 calls a day are made.
+The latest version of the plugin incorporates the consumption data capabilities of the API which allows you to track actual historical cost for each 30 minute period, this will only be possible for the previous 24 Hours as Octopus do not publish consumption data real time. The plugin also generates a daily electrical cost calculation by combining the rates from yesterday with your actual consumption during that 30 minutes. The plugin will optionally generate a daily CSV containing the rates for the current day, and a seperate action for yesterdays rates and consumption. The plugin works extremely well in combination with the Grafana plugin to allow extensive graphing.  The latest version optimises the API access such that only 2 calls a day are made.
 
 Comments and feedback extremely welcome, via the Indigo Plugin Forum at 
 I am also issue tracking in this repository
 
 Documentation at https://github.com/neilkplugins/Octopus_Energy-indigo-plugin/wiki
 
-I have started my switch and if you do so then please use my referall code https://share.octopus.energy/cute-peak-364 , and we could both get a £50 credit.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward once they hit my account.
+If you do choose to switch to Octopus then please use my referall code https://share.octopus.energy/cute-peak-364 , and we will both get a £50 credit on our accounts.  Any I get will be donated to the Children's Oncology Suites at the Royal Berkshire Hospital's Lion Ward once they hit my account.
 
 The plugin is not endorsed or supported by Octopus Energy, it merely is a use case of their API and is provided on an as is basis.  
