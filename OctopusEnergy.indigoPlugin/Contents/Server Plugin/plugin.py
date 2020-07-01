@@ -17,6 +17,7 @@ import csv
 import os
 import base64
 import dateutil.parser
+import dateutil.tz
 
 ################################################################################
 # Globals
@@ -376,10 +377,17 @@ class Plugin(indigo.PluginBase):
                     # This is the current rate cap for Agile Octopus, min value should always be lower than this, from the plugin config
                     min_rate = str(self.pluginPrefs['Capped_Rate'])
 
+                    # Used to build a matrix to determine the cheapest time to consume energy today
+                    costs = []
+                    times = []
+
                     for rates in reversed(half_hourly_rates):
                         sum_rates = sum_rates + rates["value_inc_vat"]
                         device_states.append({'key': state_list[rate_state], 'value': rates["value_inc_vat"], 'decimalPlaces' : 4 })
-
+                        period_str = rates['valid_from']
+                        time_ts = dateutil.parser.parse(timestr=period_str).astimezone(dateutil.tz.tzlocal())
+                        times.append(time_ts)
+                        costs.append(rates['value_inc_vat'])
                         rate_state += 1
                         if rates["value_inc_vat"] >= max_rate:
                             max_rate = rates["value_inc_vat"]
@@ -390,14 +398,61 @@ class Plugin(indigo.PluginBase):
                     if len(half_hourly_rates)==46:
                         device_states.append({'key': 'From-23-00', 'value': 999})
                         device_states.append({'key': 'From-23-30', 'value': 999})
+                 #
+                # Determine Lowest Cost Usage Periods in current data
+                    # Build a matrix of half-hour periods (vertical) and 1-8 averaging periods
+                    # (horizontal) (so second column is hour average costs)
+                    cost_matrix = []
+
+                    for x in range(len(costs)):
+                        cost_row = [costs[x]]
+                        for y in range(1, 8):
+                            if len(costs) - x < y + 1:
+                                # table ends before averaging period
+                                cost_row.append(None)
+                            else:
+                                cost_total = 0
+                                for z in range(y + 1):
+                                    cost_total = cost_total + costs[x + z]
+                                cost_row.append(round(cost_total / (z + 1), 4))
+                        cost_matrix.append(cost_row)
+
+                    output = []
+                    for x in range(8):
+                        # Build column, find minimum
+                        cost_col = []
+                        for y in range(len(costs)):
+                            if cost_matrix[y][x] is not None:
+                                cost_col.append(cost_matrix[y][x])
 
 
-                # Update the states to be applied to the server for the todays rates if the API call succeeded
+
+                        mindex = cost_col.index(min(cost_col))
+
+                        output.append({"time": "%s" % times[mindex].strftime("%m/%d/%Y, %H:%M:%S"),
+                                       "cost": "%.4f" % cost_col[mindex]})
+
+                        # output a list for cheapest 30m, 1h, 2h. 3h and 4h
+                    self.debugLog(json.dumps([output[0], output[1], output[3], output[5], output[7]]))
+
+
+
+                    # Update the states to be applied to the server for the todays rates if the API call succeeded
 
                     device_states.append({ 'key': 'Daily_Average_Rate', 'value' : average_rate , 'decimalPlaces' : 4 })
                     device_states.append({ 'key': 'Daily_Max_Rate', 'value' : max_rate , 'decimalPlaces' : 4 })
                     device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
                     device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
+                    device_states.append({'key': 'lowest_30m_cost', 'value': output[0]['cost'], 'decimalPlaces': 4})
+                    device_states.append({'key': 'lowest_30m_time', 'value': str(output[0]['time'])})
+                    device_states.append({'key': 'lowest_1h_cost', 'value': output[1]['cost'], 'decimalPlaces': 4})
+                    device_states.append({'key': 'lowest_1h_time', 'value': str(output[1]['time'])})
+                    device_states.append({'key': 'lowest_2h_cost', 'value': output[3]['cost'], 'decimalPlaces': 4})
+                    device_states.append({'key': 'lowest_2h_time', 'value': str(output[3]['time'])})
+                    device_states.append({'key': 'lowest_3h_cost', 'value': output[5]['cost'], 'decimalPlaces': 4})
+                    device_states.append({'key': 'lowest_3h_time', 'value': str(output[5]['time'])})
+                    device_states.append({'key': 'lowest_4h_cost', 'value': output[7]['cost'], 'decimalPlaces': 4})
+                    device_states.append({'key': 'lowest_4h_time', 'value': str(output[7]['time'])})
 
                 ########################################################################
                 # Store the JSON response to the device so that the API doesn't need to be called every 30 mins
