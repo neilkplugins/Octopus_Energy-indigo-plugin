@@ -430,7 +430,7 @@ class Plugin(indigo.PluginBase):
                         mindex = cost_col.index(min(cost_col))
 
                         output.append({"time": "%s" % times[mindex].strftime("%m/%d/%Y, %H:%M:%S"),
-                                       "cost": "%.4f" % cost_col[mindex]})
+                                       "cost": "%.4f" % cost_col[mindex],"uiTime":"%s" % times[mindex].strftime("%H:%M")})
 
                         # output a list for cheapest 30m, 1h, 2h. 3h and 4h
                     self.debugLog(json.dumps([output[0], output[1], output[3], output[5], output[7]]))
@@ -444,15 +444,15 @@ class Plugin(indigo.PluginBase):
                     device_states.append({ 'key': 'Daily_Min_Rate', 'value' : min_rate , 'decimalPlaces' : 4 })
                     device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
                     device_states.append({'key': 'lowest_30m_cost', 'value': output[0]['cost'], 'decimalPlaces': 4})
-                    device_states.append({'key': 'lowest_30m_time', 'value': str(output[0]['time'])})
+                    device_states.append({'key': 'lowest_30m_time', 'value': str(output[0]['time']), 'uiValue': str(output[0]['uiTime'])})
                     device_states.append({'key': 'lowest_1h_cost', 'value': output[1]['cost'], 'decimalPlaces': 4})
-                    device_states.append({'key': 'lowest_1h_time', 'value': str(output[1]['time'])})
+                    device_states.append({'key': 'lowest_1h_time', 'value': str(output[1]['time']), 'uiValue': str(output[1]['uiTime'])})
                     device_states.append({'key': 'lowest_2h_cost', 'value': output[3]['cost'], 'decimalPlaces': 4})
-                    device_states.append({'key': 'lowest_2h_time', 'value': str(output[3]['time'])})
+                    device_states.append({'key': 'lowest_2h_time', 'value': str(output[3]['time']), 'uiValue': str(output[3]['uiTime'])})
                     device_states.append({'key': 'lowest_3h_cost', 'value': output[5]['cost'], 'decimalPlaces': 4})
-                    device_states.append({'key': 'lowest_3h_time', 'value': str(output[5]['time'])})
+                    device_states.append({'key': 'lowest_3h_time', 'value': str(output[5]['time']), 'uiValue': str(output[5]['uiTime'])})
                     device_states.append({'key': 'lowest_4h_cost', 'value': output[7]['cost'], 'decimalPlaces': 4})
-                    device_states.append({'key': 'lowest_4h_time', 'value': str(output[7]['time'])})
+                    device_states.append({'key': 'lowest_4h_time', 'value': str(output[7]['time']), 'uiValue': str(output[7]['uiTime'])})
 
                 ########################################################################
                 # Store the JSON response to the device so that the API doesn't need to be called every 30 mins
