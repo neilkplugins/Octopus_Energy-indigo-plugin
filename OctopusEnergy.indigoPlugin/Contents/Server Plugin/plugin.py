@@ -11,7 +11,7 @@
 import indigo
 import requests
 import json
-import time
+#import time
 import datetime
 import csv
 import os
@@ -102,7 +102,7 @@ class Plugin(indigo.PluginBase):
 
         if device.deviceTypeId =="OctopusEnergy_consumption":
             local_day = datetime.datetime.now().date()
-            local_yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
+            #local_yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
 
             ########################################################################
             # Check if the API Calls have been made today, if not then re-run
@@ -116,6 +116,16 @@ class Plugin(indigo.PluginBase):
             else:
                 self.debugLog("No Need to update consumption - same day as last update "+device.name)
                 return
+
+            if device.errorState !="":
+                time_since_update = device.lastChanged - datetime.datetime.now()
+                if abs((time_since_update.total_seconds()) / 60) < 30:
+                    self.debugLog(str(abs(time_since_update.total_seconds() / 60)))
+                    indigo.server.log("API Data not yet published, will retry in "+str(30 + int((time_since_update.total_seconds() / 60)))+ " Minutes for "+ device.name)
+                    return
+                else:
+                    self.debugLog("Trying API Consumption Update")
+
 
             ########################################################################
             # Calculate the date to retrieve the usage data (only the previous day is available)
@@ -154,7 +164,7 @@ class Plugin(indigo.PluginBase):
 
             if not api_error and response_json['count']!=48:
                 api_error= True
-                self.errorLog('API Error - Meter Data not available, results limited to '+str(response_json['count']))
+                self.errorLog('API Error - Meter Data not yet available, results limited to '+str(response_json['count']))
 
             ########################################################################
             # Apply the results to the states, and if selected in the props write out a CSV file
@@ -220,7 +230,7 @@ class Plugin(indigo.PluginBase):
                 device_states.append({'key': 'API_Today', 'value': "Meter Data Not Available"})
             device.updateStatesOnServer(device_states)
             if api_error:
-                device.setErrorStateOnServer('Meter Data Not Available')
+                device.setErrorStateOnServer('Meter Data Not Yet Available')
             ########################################################################
             # Consumption device updates complete
             ########################################################################
