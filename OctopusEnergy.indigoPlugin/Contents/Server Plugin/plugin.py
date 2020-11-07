@@ -18,6 +18,7 @@ import os
 import base64
 import dateutil.parser
 import dateutil.tz
+import pytz
 
 ################################################################################
 # Globals
@@ -30,6 +31,8 @@ GET_GSP = "/industry/grid-supply-points/?postcode="
 # This is the product code for the Octopus Energy Agile Tariff which will return the 30 min rates when combined with a GSP
 PRODUCT_CODE="AGILE-18-02-21"
 state_list = ["From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","From-02-30","From-03-00","From-03-30","From-04-00","From-04-30","From-05-00","From-05-30","From-06-00","From-06-30","From-07-00","From-07-30","From-08-00","From-08-30","From-09-00","From-09-30","From-10-00","From-10-30","From-11-00","From-11-30","From-12-00","From-12-30","From-13-00","From-13-30","From-14-00","From-14-30","From-15-00","From-15-30","From-16-00","From-16-30","From-17-00","From-17-30","From-18-00","From-18-30","From-19-00","From-19-30","From-20-00","From-20-30","From-21-00","From-21-30","From-22-00","From-22-30","From-23-00","From-23-30"]
+# when DST applies you can get a full day of data from the API, but when it does not you can only get up to 23:30 if you have a SMETS2 meter, TODO add config for smets1
+state_list_gmt = ["From-23-30","From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","From-02-30","From-03-00","From-03-30","From-04-00","From-04-30","From-05-00","From-05-30","From-06-00","From-06-30","From-07-00","From-07-30","From-08-00","From-08-30","From-09-00","From-09-30","From-10-00","From-10-30","From-11-00","From-11-30","From-12-00","From-12-30","From-13-00","From-13-30","From-14-00","From-14-30","From-15-00","From-15-30","From-16-00","From-16-30","From-17-00","From-17-30","From-18-00","From-18-30","From-19-00","From-19-30","From-20-00","From-20-30","From-21-00","From-21-30","From-22-00","From-22-30","From-23-00"]
 
 
 
@@ -132,12 +135,35 @@ class Plugin(indigo.PluginBase):
             # The call either the Gas or Electricity Supply urls
             ########################################################################
 
+            # check if DST applies and if so make adjustments for the different API behaviour
+
+            now = datetime.datetime.now()
+            isdst_now_in = lambda zonename: bool(datetime.datetime.now(pytz.timezone(zonename)).dst())
+            dst_applies = isdst_now_in("Europe/London")
+            if dst_applies :
+                self.debugLog("British Summertime applies - will get the full 48 periods for yesterday 00:00 to 23:30")
+            else:
+                self.debugLog("British Summertime does not apply - will get 47 periods for yesterday 00:00 to 23:00 and 23:30 from the day before yesterday")
+
+
+
             local_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=1)
+            local_day_before_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=2)
             if device.pluginProps['meter_type']=='electricity':
-                url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
+                if dst_applies :
+                    url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
+                else:
+                # adjusted for GMT
+                    url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_day_before_yesterday)+"T23:30:00&period_to="+str(local_yesterday)+"T23:59:00"
+
                 self.debugLog("Eleccy "+ url)
             else:
-                url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
+                if dst_applies :
+                    url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
+                else :
+                    # adjusted for GMT
+                    url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_day_before_yesterday)+"T23:30:00&period_to="+str(local_yesterday)+"T23:59:00"
+
                 self.debugLog("Gas "+url)
             encoded_api_key = base64.b64encode(device.pluginProps['API_key']+":")
             payload = {}
@@ -187,12 +213,20 @@ class Plugin(indigo.PluginBase):
                     if device.pluginProps['calc_costs_yest'] and device.pluginProps['meter_type']=='electricity':
 
                         half_hour_cost = consumption["consumption"] * yesterday_rates[(47-consump_state)]['value_inc_vat']
-                        device_states.append({'key': state_list[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
+                        if dst_applies :
+                            device_states.append({'key': state_list[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
+                        else :
+                            device_states.append({'key': state_list_gmt[consump_state], 'value': half_hour_cost, 'decimalPlaces' : 4  })
+
                         sum_consump = sum_consump + half_hour_cost
                         self.debugLog(consumption['interval_start']+" "+str(half_hour_cost))
                         results_csv.append([consumption['interval_start'], half_hour_cost])
                     else:
-                        device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
+                        if dst_applies :
+                            device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
+                        else:
+                            device_states.append({'key': state_list_gmt[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
+
                         sum_consump= sum_consump + consumption["consumption"]
                         results_csv.append([consumption['interval_start'], consumption['consumption']])
 
@@ -341,6 +375,7 @@ class Plugin(indigo.PluginBase):
                 indigo.server.log("Refreshing Daily Rate Information from the Octopus API for Device "+ device.name)
 
                 PERIOD="period_from="+str(local_day)+"T00:00&period_to="+str(local_day)+"T23:59"
+
                 GET_LOCAL_TARIFFS = BASE_URL+"/products/"+PRODUCT_CODE+"/electricity-tariffs/"+TARIFF_CODE+"/standard-unit-rates/?"+PERIOD
                 try:
                     response = requests.get(GET_LOCAL_TARIFFS, timeout=float(self.pluginPrefs['requeststimeout']))
