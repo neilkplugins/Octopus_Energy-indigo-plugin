@@ -31,9 +31,11 @@ GET_GSP = "/industry/grid-supply-points/?postcode="
 # This is the product code for the Octopus Energy Agile Tariff which will return the 30 min rates when combined with a GSP
 PRODUCT_CODE="AGILE-18-02-21"
 state_list = ["From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","From-02-30","From-03-00","From-03-30","From-04-00","From-04-30","From-05-00","From-05-30","From-06-00","From-06-30","From-07-00","From-07-30","From-08-00","From-08-30","From-09-00","From-09-30","From-10-00","From-10-30","From-11-00","From-11-30","From-12-00","From-12-30","From-13-00","From-13-30","From-14-00","From-14-30","From-15-00","From-15-30","From-16-00","From-16-30","From-17-00","From-17-30","From-18-00","From-18-30","From-19-00","From-19-30","From-20-00","From-20-30","From-21-00","From-21-30","From-22-00","From-22-30","From-23-00","From-23-30"]
-# when DST applies you can get a full day of data from the API, but when it does not you can only get up to 23:30 if you have a SMETS2 meter, TODO add config for smets1
+# when DST applies you can get a full day of data from the API, but when it does not you can only get up to 23:30 if you have a SMETS2 meter
 state_list_gmt = ["From-23-30","From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","From-02-30","From-03-00","From-03-30","From-04-00","From-04-30","From-05-00","From-05-30","From-06-00","From-06-30","From-07-00","From-07-30","From-08-00","From-08-30","From-09-00","From-09-30","From-10-00","From-10-30","From-11-00","From-11-30","From-12-00","From-12-30","From-13-00","From-13-30","From-14-00","From-14-30","From-15-00","From-15-30","From-16-00","From-16-30","From-17-00","From-17-30","From-18-00","From-18-30","From-19-00","From-19-30","From-20-00","From-20-30","From-21-00","From-21-30","From-22-00","From-22-30","From-23-00"]
-
+# define periods for preferred charge devices to trigger during day or night time when lower rates are likely
+night_charge_periods = ["00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30","04:00","04:30","05:00","05:30","06:00","06:30","07:00"]
+day_charge_periods = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00"]
 
 
 
@@ -55,6 +57,10 @@ class Plugin(indigo.PluginBase):
         self.debugLog("Starting device: " + device.name)
         self.debugLog(str(device.id)+ " " + device.name)
         device.stateListOrDisplayStateIdChanged()
+        if device.deviceTypeId == "charge_sensor":
+            newProps = device.pluginProps
+            newProps['address']="Charging Sensor"
+            device.replacePluginPropsOnServer(newProps)
         if device.deviceTypeId == "OctopusEnergy_consumption":
             newProps = device.pluginProps
             if device.pluginProps['meter_type']=='electricity' and device.pluginProps['calc_costs_yest']:
@@ -100,8 +106,90 @@ class Plugin(indigo.PluginBase):
     def update(self,device):
 
         ########################################################################
+        # Complete the update process for charge sensors
+        ########################################################################
+
+
+        if device.deviceTypeId =="charge_sensor":
+            # Calculate 'now' using UTC as this will collect the correct period time regardless of Daylight Savings, as the periods are reported in UTC (Z).
+            now = datetime.datetime.utcnow()
+            # Rates are published from minute 00 to 30 and 30 to 00, work out which period we are in (0-29 mins first half, 30-59 second half)
+            # We will use this to match to the results for the current period for the response
+            local_day = datetime.datetime.now().date()
+            if int(now.strftime("%M")) > 29:
+                current_tariff_valid_period = (now.strftime("%Y-%m-%dT%H:30:00Z"))
+            else:
+                current_tariff_valid_period = (now.strftime("%Y-%m-%dT%H:00:00Z"))
+            # Compare the current_tariff_valid_period with the one stored on the device to see if we need to update (we have crossed a half hour boundary)
+            # If they match we can skip all of the updates and return, otherwise we update the period (and potentially the daily figures)
+            tariff_device = indigo.devices[int(device.pluginProps["tariff_device"])]
+            # Check the associated tariff device has already updated for today, otherwise retry on the next cycle otherwise we could be using yesterdays rates
+            if str(local_day) != tariff_device.states["API_Today"]:
+                self.debugLog("Need to update tariff device - not same day as last update "+device.name)
+                device.updateStateOnServer(key='API_Today', value='API Refresh Requested')
+            else:
+                self.debugLog("Sensor Device - tariff device has been updated for todays tariff"+device.name)
+
+            if current_tariff_valid_period == device.states["Current_From_Period"]:
+                self.debugLog("No need to update Sensor " + current_tariff_valid_period + " Stored " + device.states[
+                    "Current_From_Period"] + " for " + device.name)
+                update_sensor = False
+            else:
+                self.debugLog("Need to Update Sensor " + current_tariff_valid_period + " Stored " + device.states[
+                    "Current_From_Period"] + " for " + device.name)
+                update_sensor = True
+            if update_sensor:
+                device_states = []
+                day_rates = []
+                night_rates = []
+                for rates in json.loads(tariff_device.pluginProps['today_rates']):
+                    # Find the record with the matching current tariff period in the saved JSON
+                    for night_periods in night_charge_periods:
+                        if night_periods+":00" in rates['valid_from']:
+                            night_rates.append([rates['valid_from'],rates['value_inc_vat']])
+
+                    for day_periods in day_charge_periods:
+                        if day_periods+":00" in rates['valid_from']:
+                            day_rates.append([rates['valid_from'],rates['value_inc_vat']])
+                    if rates['valid_from'] == current_tariff_valid_period:
+                        indigo.server.log("Current Sensor Rate inc vat is " + str(rates["value_inc_vat"]))
+                        current_tariff = float(rates["value_inc_vat"])
+                        device_states.append({'key': 'Current_Electricity_Rate', 'value': current_tariff, 'decimalPlaces': 4, 'uiValue': str(current_tariff) + "p", 'clearErrorState': True})
+                sorted_night_rates = sorted(night_rates, key=lambda x: x[1])
+                sorted_day_rates = sorted(day_rates, key=lambda x: x[1])
+                if device.pluginProps['night_day']=='night':
+                    preferred_combined = sorted_night_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                else:
+                    preferred_combined = sorted_day_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+
+                preferred_periods = []
+                preferred_rates = []
+                sensor_on = False
+                for time_rates in preferred_combined:
+                    preferred_periods.append(time_rates[0])
+                    preferred_rates.append(str(time_rates[1]))
+                    if time_rates[0] == current_tariff_valid_period:
+                        sensor_on = True
+                if sensor_on and current_tariff <= float(device.pluginProps['max_rate']) :
+                    device.updateStateOnServer(key="onOffState", value ="on" )
+                else:
+                    device.updateStateOnServer(key="onOffState", value ="off" )
+
+
+                preferred_periods_ui = ",".join(preferred_periods)
+                preferred_rates_ui = ",".join(preferred_rates)
+                device_states.append({'key': 'Preferred_Periods', 'value': preferred_periods_ui })
+                device_states.append({'key': 'Preferred_Rates', 'value': str(preferred_rates_ui)})
+                device_states.append({'key': 'Current_From_Period', 'value': current_tariff_valid_period})
+                device_states.append({'key': 'No_Charge_Above', 'value': device.pluginProps['max_rate']})
+                device.updateStatesOnServer(device_states)
+
+            return
+
+        ########################################################################
         # Complete the update process for consumption devices
         ########################################################################
+
 
         if device.deviceTypeId =="OctopusEnergy_consumption":
             local_day = datetime.datetime.now().date()
@@ -143,25 +231,25 @@ class Plugin(indigo.PluginBase):
             if dst_applies :
                 self.debugLog("British Summertime applies - will get the full 48 periods for yesterday 00:00 to 23:30")
             else:
-                self.debugLog("British Summertime does not apply - will get 47 periods for yesterday 00:00 to 23:00 and 23:30 from the day before yesterday")
+                self.debugLog("British Summertime does not apply - will get 47 periods for yesterday 00:00 to 23:00 and 23:30 from the day before yesterday for a SMETS2 Meter")
 
 
 
             local_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=1)
             local_day_before_yesterday = datetime.datetime.now().date()  - datetime.timedelta(days=2)
             if device.pluginProps['meter_type']=='electricity':
-                if dst_applies :
+                if dst_applies or (not device.pluginProps['meter_type_SMETS2']):
                     url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
                 else:
-                # adjusted for GMT
+                # adjusted for GMT for SMETS2
                     url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_day_before_yesterday)+"T23:30:00&period_to="+str(local_yesterday)+"T23:59:00"
 
                 self.debugLog("Eleccy "+ url)
             else:
-                if dst_applies :
+                if dst_applies or (not device.pluginProps['meter_type_SMETS2']):
                     url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
                 else :
-                    # adjusted for GMT
+                    # adjusted for GMT for SMETS2
                     url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_day_before_yesterday)+"T23:30:00&period_to="+str(local_yesterday)+"T23:59:00"
 
                 self.debugLog("Gas "+url)
@@ -222,7 +310,7 @@ class Plugin(indigo.PluginBase):
                         self.debugLog(consumption['interval_start']+" "+str(half_hour_cost))
                         results_csv.append([consumption['interval_start'], half_hour_cost])
                     else:
-                        if dst_applies :
+                        if dst_applies or (not device.pluginProps['meter_type_SMETS2']):
                             device_states.append({'key': state_list[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
                         else:
                             device_states.append({'key': state_list_gmt[consump_state], 'value': consumption["consumption"],'decimalPlaces' : 4 })
@@ -766,6 +854,24 @@ class Plugin(indigo.PluginBase):
                 errorsDict['Device_Postcode'] = "Unknown Octopus API Error"
                 return (False, valuesDict, errorsDict)
             valuesDict['address'] = valuesDict['Device_Postcode']
+        if typeId=="charge_sensor":
+            try:
+                charge_hours = int(valuesDict['energy_hours'])
+                if charge_hours <1 or charge_hours > 10:
+                    raise Exception
+            except:
+                self.errorLog("Invalid entry for Charging Hours - must be a number greater or equal 1 and less than 12")
+                errorsDict = indigo.Dict()
+                errorsDict['energy_hours'] = "Invalid entry for Charging Hours - must be a number greater or equal to 1 and less than 12"
+                return (False, valuesDict, errorsDict)
+            try:
+                max_rate = float(valuesDict['max_rate'])
+
+            except:
+                self.errorLog("Invalid entry for Max Rate - must be a whole or decimal number")
+                errorsDict = indigo.Dict()
+                errorsDict['max_rate'] = "Invalid entry for Max Rate - must be a whole or decimal number"
+                return (False, valuesDict, errorsDict)
 
         return (True, valuesDict)
 
@@ -865,6 +971,8 @@ class Plugin(indigo.PluginBase):
     #Found this was intended unless this method was defined.  Now will only restart if the address (postcode) changes.
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
+            if origDev.deviceTypeId == "charge_sensor":
+                return False
             if origDev.pluginProps['address'] != newDev.pluginProps['address']:
                 return True
             return False
@@ -876,7 +984,7 @@ class Plugin(indigo.PluginBase):
         for dev in indigo.devices.iter():
             if dev.protocol == indigo.kProtocol.Plugin and \
                     dev.pluginId == "com.barn.indigoplugin.OctopusEnergy" and \
-                    dev.deviceTypeId != 'OctopusEnergy_consumption':
+                    dev.deviceTypeId == 'OctopusEnergy':
                 retList.append((dev.id, dev.name))
 
         retList.sort(key=lambda tup: tup[1])

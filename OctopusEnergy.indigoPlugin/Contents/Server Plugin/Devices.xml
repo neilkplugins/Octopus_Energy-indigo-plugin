@@ -397,6 +397,10 @@
                 <Label>Tariff Device:</Label>
                 <List class="self" filter="" method="getTariffDevice" dynamicReload="true"/>
             </Field>
+		<Field type="checkbox" id="meter_type_SMETS2" defaultValue="true">
+        <Label>Do you have a SMETS2 Meter </Label>
+        <Description>Uncheck this if you have a SMETS1 meter to get a natural day rather then 23:30 to 23:30 that applies to SMETS2 after DST ends</Description>
+        </Field>
 		<Field id="meter_point" type="textfield">
 			<Label>Electricty meter MPAN/ Gas meter MPRN:</Label>
 			</Field>
@@ -666,5 +670,57 @@
             </State>
 	</States>
 		<UiDisplayStateId>total_daily_consumption</UiDisplayStateId>
+	</Device>
+	<Device type="sensor" id="charge_sensor">
+		<Name>Octopus Energy Charge Sensor</Name>
+		<ConfigUI>
+			<Field id="tariff_device" type="menu">
+                <Label>Agile Rate Device </Label>
+                <List class="self" filter="" method="getTariffDevice" dynamicReload="true"/>
+            </Field>
+			<Field id="energy_hours" type="textfield" defaultValue="2">
+			<Label>How many hours of charging needed:</Label>
+				<Description>This will define the number of periods you will need to charge </Description>
+			</Field>
+			<Field type="menu" id="night_day" defaultValue="night" >
+				<List>
+					<Option value="night">Night</Option>
+					<Option value="day">Day</Option>
+				</List>
+        <Label>Night / Day Charging</Label>
+        <Description>Select for Nightime Charging (00:00 to 7:30) or Daytime (09:00 to 15:00)</Description>
+        </Field>
+			<Field id="max_rate" type="textfield" defaultValue="35">
+				<Description>Even if it is a "cheaper" period, you can set a threshold when charging does not happen if the rate is too high </Description>
+			<Label>Do not charge above (in Pence)</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+				<State id="Current_From_Period">
+                <ValueType>String</ValueType>
+                <TriggerLabel>From period for current tariff</TriggerLabel>
+                <ControlPageLabel>From period for current tariff</ControlPageLabel>
+            	</State>
+			<State id="Current_Electricity_Rate">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Current Electricity Rate</TriggerLabel>
+			<ControlPageLabel>Current Electricity Rate</ControlPageLabel>
+            </State>
+			<State id="Preferred_Periods">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Preferred Periods to Charge</TriggerLabel>
+			<ControlPageLabel>Preferred Periods to Charge</ControlPageLabel>
+            </State>
+			<State id="Preferred_Rates">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Preferred Rates</TriggerLabel>
+			<ControlPageLabel>Preferred Rates</ControlPageLabel>
+            </State>
+			<State id="No_Charge_Above">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Do not charge above (pence) </TriggerLabel>
+			<ControlPageLabel>Do not charge above (pence)</ControlPageLabel>
+            </State>
+		</States>
 	</Device>
 </Devices>
