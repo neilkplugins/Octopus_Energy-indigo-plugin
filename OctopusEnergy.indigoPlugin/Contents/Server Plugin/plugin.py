@@ -34,8 +34,9 @@ state_list = ["From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","
 # when DST applies you can get a full day of data from the API, but when it does not you can only get up to 23:30 if you have a SMETS2 meter
 state_list_gmt = ["From-23-30","From-00-00","From-00-30","From-01-00","From-01-30","From-02-00","From-02-30","From-03-00","From-03-30","From-04-00","From-04-30","From-05-00","From-05-30","From-06-00","From-06-30","From-07-00","From-07-30","From-08-00","From-08-30","From-09-00","From-09-30","From-10-00","From-10-30","From-11-00","From-11-30","From-12-00","From-12-30","From-13-00","From-13-30","From-14-00","From-14-30","From-15-00","From-15-30","From-16-00","From-16-30","From-17-00","From-17-30","From-18-00","From-18-30","From-19-00","From-19-30","From-20-00","From-20-30","From-21-00","From-21-30","From-22-00","From-22-30","From-23-00"]
 # define periods for preferred charge devices to trigger during day or night time when lower rates are likely
-night_charge_periods = ["00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30","04:00","04:30","05:00","05:30","06:00","06:30","07:00"]
-day_charge_periods = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00"]
+night_charge_periods = ["00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30","04:00","04:30","05:00","05:30","06:00","06:30","07:00","7:30"]
+day_charge_periods = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30"]
+evening_charge_periods = ["19:30","20:00","20:30","21:00","21:30","22:00","22:30","23:00","23:30"]
 
 
 
@@ -126,7 +127,7 @@ class Plugin(indigo.PluginBase):
             # Check the associated tariff device has already updated for today, otherwise retry on the next cycle otherwise we could be using yesterdays rates
             if str(local_day) != tariff_device.states["API_Today"]:
                 self.debugLog("Need to update tariff device - not same day as last update "+device.name)
-                device.updateStateOnServer(key='API_Today', value='API Refresh Requested')
+                device.updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
             else:
                 self.debugLog("Sensor Device - tariff device has been updated for todays tariff"+device.name)
 
@@ -142,6 +143,7 @@ class Plugin(indigo.PluginBase):
                 device_states = []
                 day_rates = []
                 night_rates = []
+                evening_rates = []
                 for rates in json.loads(tariff_device.pluginProps['today_rates']):
                     # Find the record with the matching current tariff period in the saved JSON
                     for night_periods in night_charge_periods:
@@ -151,16 +153,23 @@ class Plugin(indigo.PluginBase):
                     for day_periods in day_charge_periods:
                         if day_periods+":00" in rates['valid_from']:
                             day_rates.append([rates['valid_from'],rates['value_inc_vat']])
+                    for evening_periods in evening_charge_periods:
+                        if evening_periods+":00" in rates['valid_from']:
+                            evening_rates.append([rates['valid_from'],rates['value_inc_vat']])
                     if rates['valid_from'] == current_tariff_valid_period:
                         indigo.server.log("Current Sensor Rate inc vat is " + str(rates["value_inc_vat"]))
                         current_tariff = float(rates["value_inc_vat"])
                         device_states.append({'key': 'Current_Electricity_Rate', 'value': current_tariff, 'decimalPlaces': 4, 'uiValue': str(current_tariff) + "p", 'clearErrorState': True})
                 sorted_night_rates = sorted(night_rates, key=lambda x: x[1])
                 sorted_day_rates = sorted(day_rates, key=lambda x: x[1])
+                sorted_evening_rates = sorted(evening_rates, key=lambda x: x[1])
                 if device.pluginProps['night_day']=='night':
                     preferred_combined = sorted_night_rates[0: (int(device.pluginProps['energy_hours'])*2)]
-                else:
+                elif device.pluginProps['night_day']=='day':
                     preferred_combined = sorted_day_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                else:
+                    preferred_combined = sorted_evening_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+
 
                 preferred_periods = []
                 preferred_rates = []
@@ -182,6 +191,7 @@ class Plugin(indigo.PluginBase):
                 device_states.append({'key': 'Preferred_Rates', 'value': str(preferred_rates_ui)})
                 device_states.append({'key': 'Current_From_Period', 'value': current_tariff_valid_period})
                 device_states.append({'key': 'No_Charge_Above', 'value': device.pluginProps['max_rate']})
+                device_states.append({'key': 'Charge_Hours', 'value': device.pluginProps['energy_hours']})
                 device.updateStatesOnServer(device_states)
 
             return
@@ -678,13 +688,16 @@ class Plugin(indigo.PluginBase):
                     self.errorLog("Octopus API - Standing Charge Http Error "+ str(err))
                 except Exception as err:
                     self.errorLog("Octopus API - Standing Charge Other error"+str(err))
-                if response.status_code ==200:
-                    standing_charge_json = response.json()
-                    standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
-                    device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
-                    self.debugLog("Standing Charge "+str(standing_charge_inc_vat))
-                else:
+                try:
+                    if response.status_code ==200:
+                        standing_charge_json = response.json()
+                        standing_charge_inc_vat = float(standing_charge_json["results"][0]["value_inc_vat"])
+                        device_states.append({ 'key': 'Daily_Standing_Charge', 'value' : standing_charge_inc_vat , 'uiValue' :str(standing_charge_inc_vat)+"p" })
+                        self.debugLog("Standing Charge "+str(standing_charge_inc_vat))
+                except:
                     self.errorLog("Octopus API - Standing Charge Error getting Standing Charges")
+                    device_states.append({'key': 'Daily_Standing_Charge', 'value': 0,
+                                          'uiValue': "Error Standing Charge" })
 
                 # Append the updates to the updated states dict and change the state image
 
@@ -875,6 +888,36 @@ class Plugin(indigo.PluginBase):
 
         return (True, valuesDict)
 
+        ########################################
+        # UI Validate, Action Config
+        ########################################
+
+    def validateActionConfigUi(self, valuesDict, typeId, device):
+        self.debugLog(valuesDict)
+        self.debugLog(typeId)
+        if typeId == "update_max_rate":
+
+            try:
+                max_rate = float(valuesDict['max_rate'])
+
+            except:
+                self.errorLog("Invalid entry for Max Rate - must be a whole or decimal number")
+                errorsDict = indigo.Dict()
+                errorsDict['max_rate'] = "Invalid entry for Max Rate - must be a whole or decimal number"
+                return (False, valuesDict, errorsDict)
+        if typeId == "update_charge_hours":
+            try:
+                charge_hours = int(valuesDict['energy_hours'])
+                if charge_hours < 1 or charge_hours > 10:
+                    raise Exception
+            except:
+                self.errorLog("Invalid entry for Charging Hours - must be a number greater or equal 1 and less than 12")
+                errorsDict = indigo.Dict()
+                errorsDict['energy_hours'] = "Invalid entry for Charging Hours - must be a number greater or equal to 1 and less than 12"
+                return (False, valuesDict, errorsDict)
+
+
+        return (True, valuesDict)
 
 
     ########################################
@@ -910,7 +953,8 @@ class Plugin(indigo.PluginBase):
     def forceAPIrefresh(self):
             for deviceId in self.deviceList:
                 indigo.server.log(indigo.devices[deviceId].name+" Set for refresh on next cycle")
-                indigo.devices[deviceId].updateStateOnServer(key='API_Today', value='API Refresh Requested')
+                if indigo.devices[deviceId].deviceTypeId != "charge_sensor":
+                    indigo.devices[deviceId].updateStateOnServer(key='API_Today', value='API Refresh Requested')
                 if indigo.devices[deviceId].deviceTypeId != "OctopusEnergy_consumption":
                     indigo.devices[deviceId].updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
 
@@ -963,6 +1007,24 @@ class Plugin(indigo.PluginBase):
             for rates in reversed(json.loads(device.pluginProps['yesterday_rates'])):
                 writer.writerow([rates['valid_from'],rates['value_inc_vat']])
         indigo.server.log("Created CSV file "+filepath+" for device "+ device.name)
+        return()
+
+    # Update Max Charge Rate
+    def chargeSensorRate(self,pluginAction, device):
+        self.debugLog(pluginAction)
+        localPropsCopy = device.pluginProps
+        localPropsCopy['max_rate'] = pluginAction.props.get('max_rate')
+        device.replacePluginPropsOnServer(localPropsCopy)
+        device.updateStateOnServer(key='No_Charge_Above', value=pluginAction.props.get('max_rate'))
+        return()
+
+    # Update Charge Hours
+    def chargeSensorHours(self, pluginAction, device):
+        self.debugLog(pluginAction)
+        localPropsCopy = device.pluginProps
+        localPropsCopy['energy_hours'] = pluginAction.props.get('energy_hours')
+        device.replacePluginPropsOnServer(localPropsCopy)
+        device.updateStateOnServer(key='Charge_Hours', value=pluginAction.props.get('energy_hours'))
         return()
 
 

@@ -686,9 +686,10 @@
 				<List>
 					<Option value="night">Night</Option>
 					<Option value="day">Day</Option>
+					<Option value="evening">Evening</Option>
 				</List>
         <Label>Night / Day Charging</Label>
-        <Description>Select for Nightime Charging (00:00 to 7:30) or Daytime (09:00 to 15:00)</Description>
+        <Description>Select for Nightime Charging (00:00 to 7:30), Daytime (08:00 to 15:30) or Evening (19:30 to 23:30) </Description>
         </Field>
 			<Field id="max_rate" type="textfield" defaultValue="35">
 				<Description>Even if it is a "cheaper" period, you can set a threshold when charging does not happen if the rate is too high </Description>
@@ -720,6 +721,11 @@
 			<ValueType>String</ValueType>
 			<TriggerLabel>Do not charge above (pence) </TriggerLabel>
 			<ControlPageLabel>Do not charge above (pence)</ControlPageLabel>
+            </State>
+			<State id="Charge_Hours">
+			<ValueType>String</ValueType>
+			<TriggerLabel>Hours of charge required </TriggerLabel>
+			<ControlPageLabel>Hours of charge required</ControlPageLabel>
             </State>
 		</States>
 	</Device>

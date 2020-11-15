@@ -9,4 +9,22 @@
 		<Name>Write yesterdays rates to file</Name>
 		<CallbackMethod>yesterdayToFile</CallbackMethod>
 	</Action>
+	<Action id="update_max_rate" deviceFilter="self.charge_sensor" uiPath="DeviceActions">
+		<Name>Update Charge Sensor Max Rate</Name>
+		<ConfigUI>
+			<Field id="max_rate" type="textfield" defaultValue="35" >
+			<Label>New maximum charge rate</Label>
+			</Field>
+		</ConfigUI>
+		<CallbackMethod>chargeSensorRate</CallbackMethod>
+	</Action>
+	<Action id="update_charge_hours" deviceFilter="self.charge_sensor" uiPath="DeviceActions">
+		<Name>Update Charge Sensor Hours</Name>
+		<ConfigUI>
+			<Field id="energy_hours" type="textfield" defaultValue="2" >
+			<Label>New Charge Hours</Label>
+			</Field>
+		</ConfigUI>
+		<CallbackMethod>chargeSensorHours</CallbackMethod>
+	</Action>
 </Actions>
