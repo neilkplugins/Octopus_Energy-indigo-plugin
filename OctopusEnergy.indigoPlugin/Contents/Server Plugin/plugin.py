@@ -123,7 +123,12 @@ class Plugin(indigo.PluginBase):
                 current_tariff_valid_period = (now.strftime("%Y-%m-%dT%H:00:00Z"))
             # Compare the current_tariff_valid_period with the one stored on the device to see if we need to update (we have crossed a half hour boundary)
             # If they match we can skip all of the updates and return, otherwise we update the period (and potentially the daily figures)
-            tariff_device = indigo.devices[int(device.pluginProps["tariff_device"])]
+            try:
+                tariff_device = indigo.devices[int(device.pluginProps["tariff_device"])]
+            except:
+                self.errorLog("No Tariff device associated with the Charge Sensor - please select in device settings for "+device.name)
+                return
+
             # Check the associated tariff device has already updated for today, otherwise retry on the next cycle otherwise we could be using yesterdays rates
             if str(local_day) != tariff_device.states["API_Today"]:
                 self.debugLog("Need to update tariff device - not same day as last update "+device.name)
@@ -754,8 +759,9 @@ class Plugin(indigo.PluginBase):
             # Append the half hourly updates to the update dictionary but not if an API refresh failed (which will force future attempts to refresh)
             ########################################################################
 
-            device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'decimalPlaces'  :4, 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
-            device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
+            if not api_error:
+                device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'decimalPlaces'  :4, 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
+                device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
 
             ########################################################################
             # Apply State Updates to Indigo Server
@@ -884,6 +890,14 @@ class Plugin(indigo.PluginBase):
                 self.errorLog("Invalid entry for Max Rate - must be a whole or decimal number")
                 errorsDict = indigo.Dict()
                 errorsDict['max_rate'] = "Invalid entry for Max Rate - must be a whole or decimal number"
+                return (False, valuesDict, errorsDict)
+
+            try:
+                tariff_device = indigo.devices[int(valuesDict["tariff_device"])]
+            except:
+                self.errorLog("No tariff device selected")
+                errorsDict = indigo.Dict()
+                errorsDict['tariff_device'] = "Invalid entry for Max Rate - must be a whole or decimal number"
                 return (False, valuesDict, errorsDict)
 
         return (True, valuesDict)
