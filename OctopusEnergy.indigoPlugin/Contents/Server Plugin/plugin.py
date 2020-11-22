@@ -168,12 +168,30 @@ class Plugin(indigo.PluginBase):
                 sorted_night_rates = sorted(night_rates, key=lambda x: x[1])
                 sorted_day_rates = sorted(day_rates, key=lambda x: x[1])
                 sorted_evening_rates = sorted(evening_rates, key=lambda x: x[1])
+                rates_expired = False
                 if device.pluginProps['night_day']=='night':
                     preferred_combined = sorted_night_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    if now.hour >= 8 and now.hour < 18 :
+                        device_states.append({'key': 'Rates_Available', 'value': False })
+                        rates_expired = True
+                    else:
+                        device_states.append({'key': 'Rates_Available', 'value': True })
+                        rates_expired = False
                 elif device.pluginProps['night_day']=='day':
                     preferred_combined = sorted_day_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    if now.hour >= 16 and now.hour < 18 :
+                        device_states.append({'key': 'Rates_Available', 'value': False })
+                        rates_expired = True
+                    else:
+                        device_states.append({'key': 'Rates_Available', 'value': True })
                 else:
                     preferred_combined = sorted_evening_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    if now.hour < 17 :
+                        device_states.append({'key': 'Rates_Available', 'value': False })
+                        rates_expired = True
+
+                    else:
+                        device_states.append({'key': 'Rates_Available', 'value': True })
 
 
                 preferred_periods = []
@@ -192,6 +210,9 @@ class Plugin(indigo.PluginBase):
 
                 preferred_periods_ui = ",".join(preferred_periods)
                 preferred_rates_ui = ",".join(preferred_rates)
+                if rates_expired:
+                    preferred_periods_ui ="Expired/Incomplete-"+preferred_periods_ui
+                    preferred_rates_ui ="Expired/Incomplete-"+preferred_rates_ui
                 device_states.append({'key': 'Preferred_Periods', 'value': preferred_periods_ui })
                 device_states.append({'key': 'Preferred_Rates', 'value': str(preferred_rates_ui)})
                 device_states.append({'key': 'Current_From_Period', 'value': current_tariff_valid_period})
@@ -642,6 +663,7 @@ class Plugin(indigo.PluginBase):
                 # Catch all other possible failures
                 except:
                     self.errorLog("Octopus API Refresh, Error in getting yesterday tariffs")
+                    api_error_yest = True
 
 
                 ########################################################################
@@ -749,19 +771,26 @@ class Plugin(indigo.PluginBase):
             # in this 30 minute period if an update is needed
             ########################################################################
 
+            found_rate = False
             for rates in json.loads(device.pluginProps['today_rates']):
                 # Find the record with the matching current tariff period in the saved JSON
                 if rates['valid_from'] == current_tariff_valid_period:
                     indigo.server.log("Current Rate inc vat is "+str(rates["value_inc_vat"]))
                     current_tariff = float(rates["value_inc_vat"])
+                    found_rate = True
+
 
             ########################################################################
             # Append the half hourly updates to the update dictionary but not if an API refresh failed (which will force future attempts to refresh)
             ########################################################################
 
-            if not api_error:
+            if not api_error and found_rate:
                 device_states.append({ 'key': 'Current_Electricity_Rate', 'value' : current_tariff , 'decimalPlaces'  :4, 'uiValue' :str(current_tariff)+"p", 'clearErrorState':True })
                 device_states.append({ 'key': 'Current_From_Period', 'value' : current_tariff_valid_period })
+            else:
+                self.debugLog("No current rate found for "+device.name+" will correct when API responds")
+                device.setErrorStateOnServer('Rate information not available - possible API error')
+
 
             ########################################################################
             # Apply State Updates to Indigo Server
