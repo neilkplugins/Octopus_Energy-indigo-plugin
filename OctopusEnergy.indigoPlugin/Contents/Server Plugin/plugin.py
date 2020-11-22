@@ -216,7 +216,7 @@ class Plugin(indigo.PluginBase):
                 if sensor_on and current_tariff <= float(device.pluginProps['max_rate']) :
                     device.updateStateOnServer(key="onOffState", value ="on" )
                     indigo.server.log("Setting Charge Sensor to ON for "+device.name)
-                    device_states.append({'key': 'Charge_Hours_Delivered', 'value': (device.pluginProps['energy_hours']+0.5)})
+                    device_states.append({'key': 'Charge_Hours_Delivered', 'value': (device.states['Charge_Hours_Delivered']+0.5)})
                 else:
                     device.updateStateOnServer(key="onOffState", value ="off" )
                     indigo.server.log("Setting Charge Sensor to OFF for "+device.name)
