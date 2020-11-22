@@ -162,7 +162,7 @@ class Plugin(indigo.PluginBase):
                         if evening_periods+":00" in rates['valid_from']:
                             evening_rates.append([rates['valid_from'],rates['value_inc_vat']])
                     if rates['valid_from'] == current_tariff_valid_period:
-                        indigo.server.log("Current Sensor Rate inc vat is " + str(rates["value_inc_vat"]))
+                        indigo.server.log("Current Sensor Rate inc vat is " + str(rates["value_inc_vat"])+" for "+device.name)
                         current_tariff = float(rates["value_inc_vat"])
                         device_states.append({'key': 'Current_Electricity_Rate', 'value': current_tariff, 'decimalPlaces': 4, 'uiValue': str(current_tariff) + "p", 'clearErrorState': True})
                 sorted_night_rates = sorted(night_rates, key=lambda x: x[1])
