@@ -727,6 +727,11 @@
 			<TriggerLabel>Hours of charge required </TriggerLabel>
 			<ControlPageLabel>Hours of charge required</ControlPageLabel>
             </State>
+			<State id="Charge_Hours_Delivered">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Hours of charge delivered </TriggerLabel>
+			<ControlPageLabel>Hours of charge delivered</ControlPageLabel>
+            </State>
 			<State id="Rates_Available">
 			<ValueType boolType="YesNo">Boolean</ValueType>
 

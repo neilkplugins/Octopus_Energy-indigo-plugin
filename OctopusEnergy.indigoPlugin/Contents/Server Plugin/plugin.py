@@ -134,7 +134,7 @@ class Plugin(indigo.PluginBase):
                 self.debugLog("Need to update tariff device - not same day as last update "+device.name)
                 device.updateStateOnServer(key='Current_From_Period', value='API Refresh Requested')
             else:
-                self.debugLog("Sensor Device - tariff device has been updated for todays tariff"+device.name)
+                self.debugLog("Sensor Device - tariff device has been updated for todays tariff "+device.name)
 
             if current_tariff_valid_period == device.states["Current_From_Period"]:
                 self.debugLog("No need to update Sensor " + current_tariff_valid_period + " Stored " + device.states[
@@ -171,6 +171,9 @@ class Plugin(indigo.PluginBase):
                 rates_expired = False
                 if device.pluginProps['night_day']=='night':
                     preferred_combined = sorted_night_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    if now.hour == 19:
+                        indigo.server.log('Resetting Charge Hours delivered from '+str(device.states['Charge_Hours_Delivered']) +" to 0 for "+device.name)
+                        device_states.append({'key': 'Charge_Hours_Delivered', 'value': 0})
                     if now.hour >= 8 and now.hour < 18 :
                         device_states.append({'key': 'Rates_Available', 'value': False })
                         rates_expired = True
@@ -179,6 +182,10 @@ class Plugin(indigo.PluginBase):
                         rates_expired = False
                 elif device.pluginProps['night_day']=='day':
                     preferred_combined = sorted_day_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    # This is arbitrary to reset the counter at 11
+                    if now.hour == 23:
+                        indigo.server.log('Resetting Charge Hours delivered from ' + str(device.states['Charge_Hours_Delivered']) + " to 0 for " + device.name)
+                        device_states.append({'key': 'Charge_Hours_Delivered', 'value': 0})
                     if now.hour >= 16 and now.hour < 18 :
                         device_states.append({'key': 'Rates_Available', 'value': False })
                         rates_expired = True
@@ -186,6 +193,10 @@ class Plugin(indigo.PluginBase):
                         device_states.append({'key': 'Rates_Available', 'value': True })
                 else:
                     preferred_combined = sorted_evening_rates[0: (int(device.pluginProps['energy_hours'])*2)]
+                    # This is arbitrary to reset the counter at 19
+                    if now.hour == 19:
+                        indigo.server.log('Resetting Charge Hours delivered from ' + str(device.states['Charge_Hours_Delivered']) + " to 0 for " + device.name)
+                        device_states.append({'key': 'Charge_Hours_Delivered', 'value': 0})
                     if now.hour < 17 :
                         device_states.append({'key': 'Rates_Available', 'value': False })
                         rates_expired = True
@@ -204,8 +215,12 @@ class Plugin(indigo.PluginBase):
                         sensor_on = True
                 if sensor_on and current_tariff <= float(device.pluginProps['max_rate']) :
                     device.updateStateOnServer(key="onOffState", value ="on" )
+                    indigo.server.log("Setting Charge Sensor to ON for "+device.name)
+                    device_states.append({'key': 'Charge_Hours_Delivered', 'value': (device.pluginProps['energy_hours']+0.5)})
                 else:
                     device.updateStateOnServer(key="onOffState", value ="off" )
+                    indigo.server.log("Setting Charge Sensor to OFF for "+device.name)
+
 
 
                 preferred_periods_ui = ",".join(preferred_periods)
@@ -936,8 +951,6 @@ class Plugin(indigo.PluginBase):
         ########################################
 
     def validateActionConfigUi(self, valuesDict, typeId, device):
-        self.debugLog(valuesDict)
-        self.debugLog(typeId)
         if typeId == "update_max_rate":
 
             try:
@@ -1054,7 +1067,6 @@ class Plugin(indigo.PluginBase):
 
     # Update Max Charge Rate
     def chargeSensorRate(self,pluginAction, device):
-        self.debugLog(pluginAction)
         localPropsCopy = device.pluginProps
         localPropsCopy['max_rate'] = pluginAction.props.get('max_rate')
         device.replacePluginPropsOnServer(localPropsCopy)
@@ -1063,7 +1075,6 @@ class Plugin(indigo.PluginBase):
 
     # Update Charge Hours
     def chargeSensorHours(self, pluginAction, device):
-        self.debugLog(pluginAction)
         localPropsCopy = device.pluginProps
         localPropsCopy['energy_hours'] = pluginAction.props.get('energy_hours')
         device.replacePluginPropsOnServer(localPropsCopy)
