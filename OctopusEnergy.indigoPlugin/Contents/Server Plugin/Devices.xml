@@ -18,6 +18,7 @@
 		<Field type="textfield" id="CSV_FilePath" visibleBindingId="Log_Rates" visibleBindingValue="true">
     <Label>Enter the file path you use for MatplotLib CSV Data Files (Save Data files to from plugin config)</Label>
     </Field>
+
 		</ConfigUI>
 		<States>
 		<State id="Current_Electricity_Rate">
@@ -373,6 +374,306 @@
 
         </States>
         <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>		
+	</Device>
+	<Device type="custom" id="OctopusEnergyGo">
+		<Name>Octopus Energy Go Electricity Rates</Name>
+		<ConfigUI>
+		<Field type="menu" id="Go_Tariff" >
+    <Label>Select Go Variant:</Label>
+			<List>
+				<Option value="Go">Go - Standard</Option>
+				<Option value="Go4">Go - Faster 4H</Option>
+				<Option value="Go5">Go - Faster 5H</Option>
+
+			</List>
+
+    </Field>
+			<Field type="menu" id="Start_Time" >
+    <Label>Select Go Start Tieme:</Label>
+			<Description>Enter the time your Go period starts, 00:30 if standard Go </Description>
+			<List>
+				<Option value="0030">00:30</Option>
+				<Option value="2030">20:30</Option>
+				<Option value="2130">21:30</Option>
+				<Option value="2230">22:30</Option>
+				<Option value="2330">23:30</Option>
+				<Option value="0130">01:30</Option>
+				<Option value="0230">02:30</Option>
+
+			</List>
+			</Field>
+
+			<Field type="textfield" id="Go_Day_Rate" >
+				<Label>Go Day Rate</Label></Field>
+			<Field type="textfield" id="Go_Night_Rate" >
+				<Label>Go Night Rate</Label></Field>
+			<Field type="textfield" id="Go_Standing_Charge" >
+				<Label>Go Standing Charge</Label></Field>
+
+
+		</ConfigUI>
+		<States>
+		<State id="Current_Electricity_Rate">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Current Electricity Rate</TriggerLabel>
+			<ControlPageLabel>Current Electricity Rate</ControlPageLabel>
+            </State>
+            <State id="Daily_Standing_Charge">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Daily Standing Charge</TriggerLabel>
+			<ControlPageLabel>Daily Standing Charge</ControlPageLabel>
+            </State>
+
+            <State id="Current_From_Period">
+                <ValueType>String</ValueType>
+                <TriggerLabel>From period for current tariff</TriggerLabel>
+                <ControlPageLabel>From period for current tariff</ControlPageLabel>
+            </State>
+
+
+<State id="From-00-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 00:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 00:00</ControlPageLabel>
+            </State>
+		<State id="From-00-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 00:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 00:30</ControlPageLabel>
+            </State>
+		<State id="From-01-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 01:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 01:00</ControlPageLabel>
+            </State>
+		<State id="From-01-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 01:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 01:30</ControlPageLabel>
+            </State>
+		<State id="From-02-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 02:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 02:00</ControlPageLabel>
+            </State>
+		<State id="From-02-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 02:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 02:30</ControlPageLabel>
+            </State>
+		<State id="From-03-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 03:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 03:00</ControlPageLabel>
+            </State>
+		<State id="From-03-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 03:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 03:30</ControlPageLabel>
+            </State>
+		<State id="From-04-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 04:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 04:00</ControlPageLabel>
+            </State>
+		<State id="From-04-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 04:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 04:30</ControlPageLabel>
+            </State>
+		<State id="From-05-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 05:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 05:00</ControlPageLabel>
+            </State>
+		<State id="From-05-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 05:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 05:30</ControlPageLabel>
+            </State>
+		<State id="From-06-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 06:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 06:00</ControlPageLabel>
+            </State>
+		<State id="From-06-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 06:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 06:30</ControlPageLabel>
+            </State>
+		<State id="From-07-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 07:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 07:00</ControlPageLabel>
+            </State>
+		<State id="From-07-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 07:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 07:30</ControlPageLabel>
+            </State>
+		<State id="From-08-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 08:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 08:00</ControlPageLabel>
+            </State>
+		<State id="From-08-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 08:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 08:30</ControlPageLabel>
+            </State>
+		<State id="From-09-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 09:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 09:00</ControlPageLabel>
+            </State>
+		<State id="From-09-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 09:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 09:30</ControlPageLabel>
+            </State>
+		<State id="From-10-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 10:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 10:00</ControlPageLabel>
+            </State>
+		<State id="From-10-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 10:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 10:30</ControlPageLabel>
+            </State>
+		<State id="From-11-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 11:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 11:00</ControlPageLabel>
+            </State>
+		<State id="From-11-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 11:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 11:30</ControlPageLabel>
+            </State>
+		<State id="From-12-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 12:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 12:00</ControlPageLabel>
+            </State>
+		<State id="From-12-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 12:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 12:30</ControlPageLabel>
+            </State>
+		<State id="From-13-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 13:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 13:00</ControlPageLabel>
+            </State>
+		<State id="From-13-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 13:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 13:30</ControlPageLabel>
+            </State>
+		<State id="From-14-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 14:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 14:00</ControlPageLabel>
+            </State>
+		<State id="From-14-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 14:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 14:30</ControlPageLabel>
+            </State>
+		<State id="From-15-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 15:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 15:00</ControlPageLabel>
+            </State>
+		<State id="From-15-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 15:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 15:30</ControlPageLabel>
+            </State>
+		<State id="From-16-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 16:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 16:00</ControlPageLabel>
+            </State>
+		<State id="From-16-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 16:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 16:30</ControlPageLabel>
+            </State>
+		<State id="From-17-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 17:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 17:00</ControlPageLabel>
+            </State>
+		<State id="From-17-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 17:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 17:30</ControlPageLabel>
+            </State>
+		<State id="From-18-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 18:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 18:00</ControlPageLabel>
+            </State>
+		<State id="From-18-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 18:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 18:30</ControlPageLabel>
+            </State>
+		<State id="From-19-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 19:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 19:00</ControlPageLabel>
+            </State>
+		<State id="From-19-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 19:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 19:30</ControlPageLabel>
+            </State>
+		<State id="From-20-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 20:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 20:00</ControlPageLabel>
+            </State>
+		<State id="From-20-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 20:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 20:30</ControlPageLabel>
+            </State>
+		<State id="From-21-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 21:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 21:00</ControlPageLabel>
+            </State>
+		<State id="From-21-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 21:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 21:30</ControlPageLabel>
+            </State>
+		<State id="From-22-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 22:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 22:00</ControlPageLabel>
+            </State>
+		<State id="From-22-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 22:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 22:30</ControlPageLabel>
+            </State>
+		<State id="From-23-00">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 23:00</TriggerLabel>
+			<ControlPageLabel>Tariff from 23:00</ControlPageLabel>
+            </State>
+		<State id="From-23-30">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Tariff from 23:30</TriggerLabel>
+			<ControlPageLabel>Tariff from 23:30</ControlPageLabel>
+            </State>
+
+        </States>
+        <UiDisplayStateId>Current_Electricity_Rate</UiDisplayStateId>
 	</Device>
 	<Device type="custom" id="OctopusEnergy_consumption">
 		<Name>Octopus Energy Historical Consumption/Cost</Name>

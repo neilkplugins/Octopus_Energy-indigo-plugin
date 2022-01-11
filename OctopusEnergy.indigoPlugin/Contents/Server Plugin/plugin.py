@@ -105,6 +105,48 @@ class Plugin(indigo.PluginBase):
 
     ########################################
     def update(self,device):
+        ########################################################################
+        # Complete the update process for Go Rate Devices
+        ########################################################################
+        if device.deviceTypeId == "OctopusEnergyGo":
+            self.debugLog("Updating Go device "+ device.name)
+            device.stateListOrDisplayStateIdChanged()
+
+            # Calculate 'now' using UTC as this will collect the correct tariff regardless of Daylight Savings, as the periods are reported in UTC (Z).  This will be the same baseline as the consumption data
+            now = datetime.datetime.utcnow()
+            # But calculate the applicable day using local time and the API will automatically adjust if it is BST and will ensure max, min and average align to the local time
+            local_day = datetime.datetime.now().date()
+
+            ########################################################################
+            # Check if the device state for the current tariff matches the "current period", if so no updates required
+            ########################################################################
+
+            # Rates are published from minute 00 to 30 and 30 to 00, work out which period we are in (0-29 mins first half, 30-59 second half)
+            # We will use this to match to the results for the current period for the response
+            if int(now.strftime("%M")) > 29:
+                current_tariff_valid_period = (now.strftime("%Y-%m-%dT%H:30:00Z"))
+            else:
+                current_tariff_valid_period = (now.strftime("%Y-%m-%dT%H:00:00Z"))
+            # Compare the current_tariff_valid_period with the one stored on the device to see if we need to update (we have crossed a half hour boundary)
+            # If they match we can skip all of the updates and return, otherwise we update the period (and potentially the daily figures)
+            if current_tariff_valid_period == device.states["Current_From_Period"]:
+                self.debugLog("No need to update Current " + current_tariff_valid_period + " Stored " + device.states[
+                    "Current_From_Period"] + " for " + device.name)
+            else:
+                self.debugLog("Need to Update Current " + current_tariff_valid_period + " Stored " + device.states[
+                    "Current_From_Period"] + " for " + device.name)
+                update_rate = True
+            if update_rate:
+                ########################################################################
+                # If "update_rate is true" this will be the first run after either minute 00 or minute 30
+                # So the rate needs to be checked if it is in the Go Period
+                ########################################################################
+
+                # Create update list that will be used to minimise Indigo Server calls, will all be applied at the end of update in a single update states on server call
+                device_states = []
+            return
+
+
 
         ########################################################################
         # Complete the update process for charge sensors
@@ -295,7 +337,7 @@ class Plugin(indigo.PluginBase):
                 # adjusted for GMT for SMETS2
                     url = "https://api.octopus.energy/v1/electricity-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_day_before_yesterday)+"T23:30:00&period_to="+str(local_yesterday)+"T23:59:00"
 
-                self.debugLog("Eleccy "+ url)
+                self.debugLog("Electricity "+ url)
             else:
                 if dst_applies or (not device.pluginProps['meter_type_SMETS2']):
                     url = "https://api.octopus.energy/v1/gas-meter-points/"+device.pluginProps['meter_point']+"/meters/"+device.pluginProps['meter_serial']+"/consumption/?period_from="+str(local_yesterday)+"T00:00:00&period_to="+str(local_yesterday)+"T23:59:00"
@@ -411,7 +453,7 @@ class Plugin(indigo.PluginBase):
             return
 
         ########################################################################
-        # Now if it is not a consumption device, it is a rate device so update that
+        # Now if it is not a consumption device or Go, it is an Agile rate device so update that
         ########################################################################
 
 
@@ -506,6 +548,8 @@ class Plugin(indigo.PluginBase):
 
             if (update_daily_rate or update_afternoon_refresh):
 
+
+
                 ########################################################################
                 # Now Make the API calls
                 ########################################################################
@@ -538,6 +582,7 @@ class Plugin(indigo.PluginBase):
                         # Update the device state to show the API update has run sucessfully
                         device_states.append({ 'key': 'API_Today', 'value' : str(local_day)})
                         self.debugLog("Got the rates OK")
+                        self.debugLog(half_hourly_rates)
                         if current_tariff_valid_period == str(local_day)+"T17:00:00Z":
                             self.debugLog("Setting Afternoon refresh done to device state")
                             device_states.append({ 'key': 'API_Afternoon_Refresh', 'value' : True })
@@ -1088,6 +1133,8 @@ class Plugin(indigo.PluginBase):
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
             if origDev.deviceTypeId == "charge_sensor":
+                return False
+            if origDev.deviceTypeId == "OctopusEnergyGo":
                 return False
             if origDev.pluginProps['address'] != newDev.pluginProps['address']:
                 return True
