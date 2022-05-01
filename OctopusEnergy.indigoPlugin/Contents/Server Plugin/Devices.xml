@@ -381,27 +381,24 @@
 		<Field type="menu" id="Go_Tariff" >
     <Label>Select Go Variant:</Label>
 			<List>
-				<Option value="Go">Go - Standard</Option>
-				<Option value="Go4">Go - Faster 4H</Option>
-				<Option value="Go5">Go - Faster 5H</Option>
+				<Option value="go">Go - Standard</Option>
+				<Option value="go_faster_4_2030">Go - Faster 4H - 20:30 </Option>
+				<Option value="go_faster_4_2130">Go - Faster 4H - 21:30 </Option>
+				<Option value="go_faster_4_2230">Go - Faster 4H - 22:30 </Option>
+				<Option value="go_faster_4_2330">Go - Faster 4H - 23:30 </Option>
+				<Option value="go_faster_4_0030">Go - Faster 4H - 00:30 </Option>
+				<Option value="go_faster_4_0130">Go - Faster 4H - 01:30 </Option>
+				<Option value="go_faster_4_0230">Go - Faster 4H - 02:30 </Option>
+				<Option value="go_faster_5_2030">Go - Faster 5H - 20:30 </Option>
+				<Option value="go_faster_5_2130">Go - Faster 5H - 21:30 </Option>
+				<Option value="go_faster_5_2230">Go - Faster 5H - 22:30 </Option>
+				<Option value="go_faster_5_2330">Go - Faster 5H - 23:30 </Option>
+				<Option value="go_faster_5_0030">Go - Faster 5H - 00:30 </Option>
+				<Option value="go_faster_5_0130">Go - Faster 5H - 01:30 </Option>
 
 			</List>
 
-    </Field>
-			<Field type="menu" id="Start_Time" >
-    <Label>Select Go Start Tieme:</Label>
-			<Description>Enter the time your Go period starts, 00:30 if standard Go </Description>
-			<List>
-				<Option value="0030">00:30</Option>
-				<Option value="2030">20:30</Option>
-				<Option value="2130">21:30</Option>
-				<Option value="2230">22:30</Option>
-				<Option value="2330">23:30</Option>
-				<Option value="0130">01:30</Option>
-				<Option value="0230">02:30</Option>
-
-			</List>
-			</Field>
+    	</Field>
 
 			<Field type="textfield" id="Go_Day_Rate" >
 				<Label>Go Day Rate</Label></Field>
@@ -422,6 +419,16 @@
 			<ValueType>Number</ValueType>
 			<TriggerLabel>Daily Standing Charge</TriggerLabel>
 			<ControlPageLabel>Daily Standing Charge</ControlPageLabel>
+            </State>
+			<State id="Day_Rate">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Day electricity rate</TriggerLabel>
+			<ControlPageLabel>Daytime Electricity Rate</ControlPageLabel>
+            </State>
+			<State id="Go_Rate">
+			<ValueType>Number</ValueType>
+			<TriggerLabel>Go electricity rate</TriggerLabel>
+			<ControlPageLabel>Go Electricity Rate</ControlPageLabel>
             </State>
 
             <State id="Current_From_Period">
