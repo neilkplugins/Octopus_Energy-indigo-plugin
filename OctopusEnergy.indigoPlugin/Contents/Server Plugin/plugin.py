@@ -354,7 +354,7 @@ class Plugin(indigo.PluginBase):
             ########################################################################
             # Check if the API Calls have been made today, if not then re-run
             # The previous day results are not available at a known time after midnight
-            # and it varies wildly.  My need to add a mechanism to set them out of range if no update is available
+            # and it varies wildly.  May need to add a mechanism to set them out of range if no update is available
             ########################################################################
 
             if str(local_day) != device.states["API_Today"]:
@@ -420,15 +420,14 @@ class Plugin(indigo.PluginBase):
 
                 self.debugLog("Gas " + url)
             #self.debugLog(type(device.pluginProps['API_key']))
-            #api_key_concat = device.pluginProps['API_key'] + ":"
-            #self.debugLog(api_key_concat)
-            #api_key_bytes = (api_key_concat).encode()
-
-            encoded_api_key = base64.b64encode(device.pluginProps['API_key'] + ":").encode
+            api_key_concat = device.pluginProps['API_key'] + ":"
+            api_key_bytes = str.encode(api_key_concat)
+            encoded_api_key = base64.b64encode(api_key_bytes)
             payload = {}
             headers = {
                 b'Authorization': b'Basic ' + encoded_api_key
             }
+
             api_error = False
             # response = requests.request("GET", url, headers=headers, data=payload)
             try:
@@ -441,7 +440,6 @@ class Plugin(indigo.PluginBase):
                 self.errorLog("Octopus API refresh failure (consumption), Other error " + str(err))
                 api_error = True
             response_json = response.json()
-
             ########################################################################
             # If we have had a valid response, we need to check that the days values have been returned
             # It reports in 30 min periods, so we should have 48  results if the data is available
@@ -1014,6 +1012,8 @@ class Plugin(indigo.PluginBase):
     # UI Validate, Device Config
     ########################################
     def validateDeviceConfigUi(self, valuesDict, typeId, device):
+        if typeId == "OctopusEnergyGo":
+            valuesDict['address'] = valuesDict['Go_Tariff']
         if typeId == "OctopusEnergy_consumption":
             return True, valuesDict
         if typeId == "OctopusEnergy":
